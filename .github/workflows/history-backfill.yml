@@ -1,0 +1,49 @@
+name: Backfill 30 days of archived station verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/history-backfill.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: verification-pipeline
+  cancel-in-progress: false
+
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate offline verification logic
+        run: python -m unittest discover -s backend -p 'test_*.py' -v
+      - name: Download historical MOS runs and METAR observations
+        run: python backend/pipeline.py --backfill-days 30
+      - name: Commit the original-vintage historical data
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/archive/ public/data/dashboard.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: backfill 30 days of archived station verification'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
+      - name: Store historical backfill diagnostics on failure
+        if: failure()
+        run: |
+          mkdir -p diagnostics
+          printf '%s\n' 'Historical backfill failed. Inspect this run Actions logs and rerun from Actions → Backfill 30 days.' > diagnostics/history-backfill-failure.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/history-backfill-failure.txt
+          git commit -m 'ci: note historical backfill failure' || true
+          git push origin HEAD:main || true
