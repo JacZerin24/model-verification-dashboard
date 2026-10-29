@@ -1,0 +1,317 @@
+#!/usr/bin/env python3
+"""Collect archived station MOS guidance and ASOS observations; publish honest verification.
+
+Python standard library only. Forecasts are stored by ORIGINAL model run, so they
+are never retroactively replaced by the latest forecast.
+"""
+from __future__ import annotations
+
+import argparse
+import bisect
+import csv
+import io
+import json
+import math
+import os
+import time
+import urllib.parse
+import urllib.request
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+ARCHIVE = ROOT / "data" / "archive"
+OUTPUT = ROOT / "public" / "data" / "dashboard.json"
+UTC = timezone.utc
+STATIONS = {
+    "KBTR": {"name": "Baton Rouge", "iem": "BTR", "network": "LA_ASOS", "lat": 30.533, "lon": -91.150},
+    "KMSY": {"name": "New Orleans Intl", "iem": "MSY", "network": "LA_ASOS", "lat": 29.993, "lon": -90.258},
+    "KHDC": {"name": "Hammond", "iem": "HDC", "network": "LA_ASOS", "lat": 30.521, "lon": -90.418},
+    "KNEW": {"name": "New Orleans Lakefront", "iem": "NEW", "network": "LA_ASOS", "lat": 30.042, "lon": -90.028},
+    "KASD": {"name": "Slidell", "iem": "ASD", "network": "LA_ASOS", "lat": 30.346, "lon": -89.820},
+    "KMCB": {"name": "McComb", "iem": "MCB", "network": "MS_ASOS", "lat": 31.178, "lon": -90.472},
+    "KGPT": {"name": "Gulfport", "iem": "GPT", "network": "MS_ASOS", "lat": 30.407, "lon": -89.070},
+}
+MODELS = {
+    "NBS": {"label": "NBM Short", "family": "NBM station guidance"},
+    "NBE": {"label": "NBM Extended", "family": "NBM station guidance"},
+    "GFS": {"label": "GFS MOS", "family": "Statistical guidance — not raw GFS"},
+    "NAM": {"label": "NAM MOS", "family": "Statistical guidance — not raw NAM"},
+}
+ELEMENTS = {
+    "tmp": {"label": "Temperature", "unit": "°F", "min": -80, "max": 145},
+    "dpt": {"label": "Dew point", "unit": "°F", "min": -100, "max": 115},
+    "wsp": {"label": "Wind speed", "unit": "kt", "min": 0, "max": 160},
+    "gst": {"label": "Wind gust", "unit": "kt", "min": 0, "max": 180},
+}
+LEADS = {"all": (0, 999), "0-12": (0, 12), "12-24": (12, 24),
+         "24-48": (24, 48), "48-72": (48, 72), "72-120": (72, 120),
+         "120+": (120, 999)}
+HEADERS = {"User-Agent": "model-verification-dashboard/0.1 (+public research; contact via GitHub)"}
+
+
+def utcnow():
+    return datetime.now(UTC)
+
+
+def dt(value):
+    if value is None or str(value).strip() in ("", "None"):
+        raise ValueError("missing timestamp")
+    s = str(value).strip().replace(" UTC", "").replace("Z", "+00:00")
+    parsed = datetime.fromisoformat(s)
+    return parsed.replace(tzinfo=UTC) if parsed.tzinfo is None else parsed.astimezone(UTC)
+
+
+def iso(value):
+    return value.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def number(value, variable):
+    if value is None or str(value).strip() in ("", "M", "T", "-99", "999", "9999", "None", "null"):
+        return None
+    try:
+        x = float(value)
+    except (TypeError, ValueError):
+        return None
+    bounds = ELEMENTS[variable]
+    return round(x, 2) if math.isfinite(x) and bounds["min"] <= x <= bounds["max"] else None
+
+
+def get_text(url):
+    last_exc = None
+    for attempt in range(3):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=35) as res:
+                text = res.read().decode("utf-8-sig")
+            if text.lstrip().startswith("<!DOCTYPE") or text.lstrip().startswith("<html"):
+                raise ValueError("HTML returned in place of data")
+            return text
+        except (OSError, ValueError) as exc:
+            last_exc = exc
+            if attempt < 2:
+                time.sleep(2 ** attempt)
+    raise RuntimeError(str(last_exc))
+
+
+def parse_mos(payload, station, model):
+    """Parse IEM MOS API data, rejecting ambiguous or missing timestamps."""
+    records = []
+    schema = payload.get("schema", [])
+    cols = [(x.get("name") if isinstance(x, dict) else str(x)) for x in schema]
+    for raw in payload.get("data", []):
+        row = raw if isinstance(raw, dict) else dict(zip(cols, raw))
+        try:
+            init = dt(row.get("runtime_utc") or row.get("runtime"))
+            valid = dt(row.get("ftime_utc") or row.get("ftime"))
+        except (ValueError, TypeError):
+            continue
+        lead = (valid - init).total_seconds() / 3600
+        if lead < 0 or lead > 300:
+            continue
+        values = {key: number(row.get(key), key) for key in ELEMENTS}
+        if all(val is None for val in values.values()):
+            continue
+        records.append({"station": station, "model": model, "init": iso(init),
+                        "valid": iso(valid), "lead": round(lead, 2), **values})
+    return records
+
+
+def fetch_mos(station, model):
+    query = urllib.parse.urlencode({"station": station, "model": model})
+    url = "https://mesonet.agron.iastate.edu/api/1/mos.json?" + query
+    return parse_mos(json.loads(get_text(url)), station, model)
+
+
+def parse_asos(text, station):
+    lines = [line for line in text.splitlines() if line.strip() and not line.startswith("#")]
+    records = []
+    if not lines:
+        return records
+    for row in csv.DictReader(io.StringIO("\n".join(lines))):
+        try:
+            valid = dt(row.get("valid"))
+        except (ValueError, TypeError):
+            continue
+        values = {key: number(row.get(src), key)
+                  for key, src in (("tmp", "tmpf"), ("dpt", "dwpf"),
+                                   ("wsp", "sknt"), ("gst", "gust"))}
+        if all(value is None for value in values.values()):
+            continue
+        records.append({"station": station, "valid": iso(valid), **values})
+    return records
+
+
+def fetch_asos(station, meta, now):
+    start = now - timedelta(days=5)
+    end = now + timedelta(days=1)
+    params = [
+        ("station", meta["iem"]), ("network", meta["network"]),
+        ("data", "tmpf"), ("data", "dwpf"), ("data", "sknt"), ("data", "gust"),
+        ("year1", str(start.year)), ("month1", str(start.month)), ("day1", str(start.day)),
+        ("year2", str(end.year)), ("month2", str(end.month)), ("day2", str(end.day)),
+        ("tz", "Etc/UTC"), ("format", "onlycomma"), ("latlon", "no"),
+        ("elev", "no"), ("missing", "M"), ("trace", "T"), ("direct", "no"),
+        ("report_type", "3"), ("report_type", "4"),
+    ]
+    url = "https://mesonet.agron.iastate.edu/cgi-bin/request/asos.py?" + urllib.parse.urlencode(params)
+    return parse_asos(get_text(url), station)
+
+
+def read_archive(name):
+    path = ARCHIVE / name
+    if not path.exists():
+        return []
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return data if isinstance(data, list) else []
+
+
+def write_json(path, payload):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(payload, separators=(",", ":"), ensure_ascii=False) + "\n",
+                         encoding="utf-8")
+    temporary.replace(path)
+
+
+def merge(old, incoming, keys, cutoff):
+    unique = {tuple(rec[k] for k in keys): rec for rec in old if rec.get("valid", "") >= cutoff}
+    for rec in incoming:
+        if rec.get("valid", "") >= cutoff:
+            key = tuple(rec[k] for k in keys)
+            # Preserve good older values if a later report omits one element.
+            unique[key] = {**unique.get(key, {}), **{k: v for k, v in rec.items() if v is not None}}
+    return sorted(unique.values(), key=lambda x: tuple(x[k] for k in keys))
+
+
+def closest_observation(obs, valid, element, tolerance_seconds=2400):
+    """Return nearest valid observation within ±40 min, no temporal interpolation."""
+    if not obs:
+        return None
+    times = [r["valid"] for r in obs]
+    pos = bisect.bisect_left(times, valid)
+    candidates = obs[max(0, pos - 1):pos + 2]
+    candidates = [x for x in candidates if x.get(element) is not None
+                  and abs((dt(x["valid"]) - dt(valid)).total_seconds()) <= tolerance_seconds]
+    return min(candidates, key=lambda x: abs((dt(x["valid"]) - dt(valid)).total_seconds())) if candidates else None
+
+
+def calculate(forecasts, observations, now):
+    obs_by_station = defaultdict(list)
+    for row in observations:
+        obs_by_station[row["station"]].append(row)
+    for rows in obs_by_station.values():
+        rows.sort(key=lambda x: x["valid"])
+    # Scores are based on matched, previously archived forecast/observation pairs.
+    bins = defaultdict(list)
+    matched = 0
+    recent_pairs = []
+    for forecast in forecasts:
+        valid = dt(forecast["valid"])
+        if valid > now - timedelta(minutes=10) or valid < now - timedelta(days=30):
+            continue
+        for element in ELEMENTS:
+            predicted = forecast.get(element)
+            if predicted is None:
+                continue
+            obs = closest_observation(obs_by_station[forecast["station"]], forecast["valid"], element)
+            if not obs:
+                continue
+            error = predicted - obs[element]
+            matched += 1
+            for horizon in (7, 30):
+                if valid < now - timedelta(days=horizon):
+                    continue
+                for label, (lo, hi) in LEADS.items():
+                    if lo <= forecast["lead"] < hi:
+                        bins[(forecast["station"], forecast["model"], element, horizon, label)].append(error)
+            if valid >= now - timedelta(days=3):
+                recent_pairs.append({
+                    "station": forecast["station"], "model": forecast["model"],
+                    "element": element, "valid": forecast["valid"], "init": forecast["init"],
+                    "lead": forecast["lead"], "forecast": predicted, "observed": obs[element],
+                    "error": round(error, 2),
+                })
+    scores = []
+    for (station, model, element, horizon, lead), errors in bins.items():
+        count = len(errors)
+        scores.append({"station": station, "model": model, "element": element,
+                       "days": horizon, "lead": lead, "n": count,
+                       "mae": round(sum(abs(x) for x in errors) / count, 2),
+                       "rmse": round(math.sqrt(sum(x * x for x in errors) / count), 2),
+                       "bias": round(sum(errors) / count, 2)})
+    scores.sort(key=lambda r: (r["station"], r["element"], r["days"], r["lead"], r["model"]))
+    latest_by_run = {}
+    for forecast in forecasts:
+        key = forecast["station"], forecast["model"]
+        latest_by_run[key] = max(latest_by_run.get(key, ""), forecast["init"])
+    latest = [
+        row for row in forecasts
+        if row["init"] == latest_by_run[(row["station"], row["model"])]
+        and now - timedelta(hours=6) <= dt(row["valid"]) <= now + timedelta(days=10)
+    ]
+    recent_obs = [row for row in observations if dt(row["valid"]) >= now - timedelta(days=4)]
+    return scores, latest, recent_obs, recent_pairs[-8000:], matched
+
+
+def run(offline=False):
+    now = utcnow()
+    cutoff = iso(now - timedelta(days=35))
+    forecasts = read_archive("forecasts.json")
+    observations = read_archive("observations.json")
+    new_forecasts, new_obs, warnings = [], [], []
+    if not offline:
+        for station in STATIONS:
+            for model in MODELS:
+                try:
+                    rows = fetch_mos(station, model)
+                    if not rows:
+                        raise ValueError("Empty station forecast response")
+                    new_forecasts.extend(rows)
+                    print(f"MOS {station} {model}: {len(rows)}")
+                except (RuntimeError, ValueError, KeyError, json.JSONDecodeError) as exc:
+                    warnings.append(f"{station} {model}: {str(exc)[:130]}")
+            try:
+                rows = fetch_asos(station, STATIONS[station], now)
+                if not rows:
+                    raise ValueError("No station observations returned")
+                new_obs.extend(rows)
+                print(f"ASOS {station}: {len(rows)}")
+            except (RuntimeError, ValueError, KeyError) as exc:
+                warnings.append(f"{station} ASOS: {str(exc)[:130]}")
+    forecasts = merge(forecasts, new_forecasts, ("station", "model", "init", "valid"), cutoff)
+    observations = merge(observations, new_obs, ("station", "valid"), cutoff)
+    scores, latest, recent_obs, recent_pairs, matched = calculate(forecasts, observations, now)
+    write_json(ARCHIVE / "forecasts.json", forecasts)
+    write_json(ARCHIVE / "observations.json", observations)
+    write_json(OUTPUT, {
+        "generatedAt": iso(now),
+        "dataStatus": "active" if forecasts and observations else "awaiting_data",
+        "stations": [{"id": code, **meta} for code, meta in STATIONS.items()],
+        "models": [{"id": code, **meta} for code, meta in MODELS.items()],
+        "elements": [{"id": code, **meta} for code, meta in ELEMENTS.items()],
+        "leadBins": list(LEADS),
+        "scores": scores, "latestForecasts": latest,
+        "recentObservations": recent_obs, "recentPairs": recent_pairs,
+        "quality": {
+            "forecastRecords": len(forecasts), "observationRecords": len(observations),
+            "matchedElementPairs30d": matched, "warnings": warnings,
+            "observationToleranceMinutes": 40, "archiveDays": 35,
+            "NBMPercentilesAvailable": False,
+        },
+        "sources": {
+            "forecast": "IEM archived MOS/operational NBM station text guidance (NBS/NBE)",
+            "observations": "IEM ASOS/METAR archive",
+        },
+    })
+    print(f"Published {len(scores)} scores, {matched} pairs, {len(warnings)} warnings")
+    for warning in warnings:
+        print("WARNING:", warning)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--offline", action="store_true", help="Regenerate from archives without network access")
+    args = parser.parse_args()
+    run(offline=args.offline)

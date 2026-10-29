@@ -1,0 +1,100 @@
+{
+  "generatedAt": null,
+  "dataStatus": "awaiting_data",
+  "stations": [
+    {
+      "id": "KBTR",
+      "name": "Baton Rouge"
+    },
+    {
+      "id": "KMSY",
+      "name": "New Orleans Intl"
+    },
+    {
+      "id": "KHDC",
+      "name": "Hammond"
+    },
+    {
+      "id": "KNEW",
+      "name": "New Orleans Lakefront"
+    },
+    {
+      "id": "KASD",
+      "name": "Slidell"
+    },
+    {
+      "id": "KMCB",
+      "name": "McComb"
+    },
+    {
+      "id": "KGPT",
+      "name": "Gulfport"
+    }
+  ],
+  "models": [
+    {
+      "id": "NBS",
+      "label": "NBM Short"
+    },
+    {
+      "id": "NBE",
+      "label": "NBM Extended"
+    },
+    {
+      "id": "GFS",
+      "label": "GFS MOS"
+    },
+    {
+      "id": "NAM",
+      "label": "NAM MOS"
+    }
+  ],
+  "elements": [
+    {
+      "id": "tmp",
+      "label": "Temperature",
+      "unit": "°F"
+    },
+    {
+      "id": "dpt",
+      "label": "Dew point",
+      "unit": "°F"
+    },
+    {
+      "id": "wsp",
+      "label": "Wind speed",
+      "unit": "kt"
+    },
+    {
+      "id": "gst",
+      "label": "Wind gust",
+      "unit": "kt"
+    }
+  ],
+  "leadBins": [
+    "all",
+    "0-12",
+    "12-24",
+    "24-48",
+    "48-72",
+    "72-120",
+    "120+"
+  ],
+  "scores": [],
+  "latestForecasts": [],
+  "recentObservations": [],
+  "recentPairs": [],
+  "quality": {
+    "forecastRecords": 0,
+    "observationRecords": 0,
+    "matchedElementPairs30d": 0,
+    "warnings": [],
+    "observationToleranceMinutes": 40,
+    "archiveDays": 35,
+    "NBMPercentilesAvailable": false
+  },
+  "sources": {
+    "forecast": "IEM MOS/operational NBM text guidance",
+    "observations": "IEM ASOS/METAR"
+  }
+}
