@@ -192,6 +192,44 @@ def weighted_interval_score(quantiles, observed):
             + 0.25 * interval_score(q[25], q[75], observed, 0.5)) / 2.5
 
 
+
+def attach_same_cycle_guidance(cases, forecasts):
+    """Attach archived station guidance only for the identical model cycle,
+    valid time and lead as each verified QMD point.
+
+    Do not compare GFS/NAM MOS to raw deterministic GFS/NAM. Never mix model
+    initialization times or apply nearest-valid interpolation. Missing values
+    stay missing, so plotted lines cannot imply fictitious forecasts.
+    """
+    index = {}
+    models = ("NBS", "NBE", "GFS", "NAM")
+    for item in forecasts:
+        model = item.get("model")
+        if model not in models:
+            continue
+        key = (item.get("station"), item.get("init"), item.get("valid"),
+               model)
+        # Original vintages are unique in the main archive. Explicitly
+        # preserve first non-missing values if a duplicate has nulls.
+        previous = index.get(key, {})
+        index[key] = {**previous, **{
+            element: item[element] for element in ("tmp", "dpt")
+            if item.get(element) is not None
+        }}
+    counts = {model: 0 for model in models}
+    enriched = []
+    for row in cases:
+        guidance = {}
+        for model in models:
+            key = (row["station"], row["init"], row["valid"], model)
+            value = index.get(key, {}).get(row["element"])
+            if value is not None:
+                guidance[model] = round(float(value), 2)
+                counts[model] += 1
+        enriched.append({**row, "guidance": guidance})
+    return enriched, counts
+
+
 def verify(records, observations, now):
     obs = defaultdict(list)
     for x in observations:
@@ -324,6 +362,10 @@ def main():
     archive=sorted(records.values(),key=lambda r:(r["init"],r["lead"],r["station"],r["element"],r["percentile"]))
     observations=read_archive("observations.json")
     scores, matched, case_details=verify(archive,observations,now)
+    # Archive MOS guidance is only overlaid when its original run matches
+    # the exact QMD initialization and valid time. Never borrow a newer run.
+    case_details, guidance_counts = attach_same_cycle_guidance(
+        case_details, read_archive("forecasts.json"))
     write_json(ARCHIVE_FILE,archive)
     write_json(OUTPUT,{
         "generatedAt":iso(now),
@@ -334,9 +376,14 @@ def main():
         "stations":[{"id":key,"name":meta["name"]} for key,meta in STATIONS.items()],
         "scores":scores,
         "recentCases":case_details,
+        "timeseries":case_details,
+        "guidanceLabels":{"NBS":"NBM Short","NBE":"NBM Extended",
+                          "GFS":"GFS MOS","NAM":"NAM MOS"},
+        "guidanceMatching":"same-station-exact-init-valid-time",
         "verificationType":"instantaneous-2m-temperature-dewpoint-not-daily-maximum",
         "quality":{"archivedQuantilePoints":len(archive),"completeVerifyingCases":matched,
                    "observationToleranceMinutes":40,
+                   "sameCycleGuidanceValues":guidance_counts,
                    "warnings":warnings,"sourceCycles":"00Z","spatialMethod":"nearest grid point"},
     })
     print(f"QMD status: {len(archive)} quantile values; {matched} verifying cases; {len(warnings)} warnings",flush=True)
