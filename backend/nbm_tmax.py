@@ -157,6 +157,12 @@ def run(no_network=False, days=7):
     metar = [r for r in metar if r.get("valid","") >= archive_cutoff]
     observations, periods = build_period_observations(archive, metar)
     scores, matched, case_details = verify(archive, observations, now)
+    # Several forecast cycles can verify against the same observed 18h window.
+    # Report the number of distinct observed station/window events separately
+    # from the number of matched forecast vintages.
+    distinct_observed_windows = len({
+        (case["station"], case["valid"]) for case in case_details
+    })
     for item in scores:
         item["element"] = "tmax18"
     for case in case_details:
@@ -182,6 +188,7 @@ def run(no_network=False, days=7):
         "quality":{
             "archivedQuantilePoints":len(archive),
             "completeVerifyingCases":matched,
+            "distinctObservedStationWindows":distinct_observed_windows,
             "metarSixHourReports":len(metar),
             "completeObservedWindows":len(periods),
             "sourceCycles":"06Z",
