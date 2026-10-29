@@ -24,9 +24,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Validate offline verification logic
-        run: python -m unittest discover -s backend -p 'test_*.py' -v
+        run: |
+          set -o pipefail
+          python -m unittest discover -s backend -p 'test_*.py' -v 2>&1 | tee /tmp/history-tests.log
       - name: Download historical MOS runs and METAR observations
-        run: python backend/pipeline.py --backfill-days 30
+        run: |
+          set -o pipefail
+          python backend/pipeline.py --backfill-days 30 2>&1 | tee /tmp/history-backfill.log
       - name: Commit the original-vintage historical data
         run: |
           git config user.name 'github-actions[bot]'
@@ -41,7 +45,12 @@ jobs:
         if: failure()
         run: |
           mkdir -p diagnostics
-          printf '%s\n' 'Historical backfill failed. Inspect this run Actions logs and rerun from Actions → Backfill 30 days.' > diagnostics/history-backfill-failure.txt
+          {
+            echo 'Historical archive backfill diagnostics'
+            echo "UTC: $(date -u +%FT%TZ)"
+            if [ -f /tmp/history-tests.log ]; then echo 'Tests:'; tail -n 80 /tmp/history-tests.log; fi
+            if [ -f /tmp/history-backfill.log ]; then echo 'Backfill:'; tail -n 90 /tmp/history-backfill.log; else echo 'Backfill did not start'; fi
+          } > diagnostics/history-backfill-failure.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add diagnostics/history-backfill-failure.txt
