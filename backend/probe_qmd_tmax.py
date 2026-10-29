@@ -27,7 +27,7 @@ def main():
             lines.append(f"\nf{lead:03d}  matching MAX percentiles: {len(filtered)}")
             lines.extend(filtered[:40])
             if not filtered:
-                lines.extend(x for x in inventory if ":MAX:" in x or ":TMAX:" in x)[:10]
+                lines.extend([x for x in inventory if ":MAX:" in x or ":TMAX:" in x][:10])
         except Exception as exc:
             lines.append(f"f{lead:03d} ERROR {type(exc).__name__}: {str(exc)[:300]}")
     out=Path(__file__).resolve().parents[1]/"diagnostics"/"tmax-inventory.txt"
