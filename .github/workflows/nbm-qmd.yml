@@ -18,15 +18,20 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 concurrency:
-  group: qmd-point-archive
-  cancel-in-progress: true
+  group: verification-pipeline
+  cancel-in-progress: false
 
 jobs:
   qmd:
     runs-on: ubuntu-latest
     timeout-minutes: 55
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -69,3 +74,39 @@ jobs:
             git pull --rebase origin main
             git push origin HEAD:main
           fi
+      - name: Set up Node.js for GitHub Pages
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dashboard dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build dashboard including the newest QMD dataset
+        env:
+          GITHUB_PAGES: 'true'
+        run: npm run build
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload dashboard
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy updated QMD scores to Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Record successful percentile page deployment
+        if: success()
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          mkdir -p diagnostics
+          {
+            echo 'NBM QMD percentile dashboard deployed successfully'
+            echo "UTC: $(date -u +%FT%TZ)"
+            echo "Site: $PAGE_URL"
+          } > diagnostics/qmd-pages-success.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/qmd-pages-success.txt
+          git commit -m 'ci: record successful QMD Pages deployment' || true
+          git pull --rebase origin main || true
+          git push origin HEAD:main || true
