@@ -30,6 +30,7 @@ type Dashboard = {
   elements: Element[]
   fairScores?: FairScore[]
   dailyScores?: DailyScore[]
+  comparisonProducts?: Record<string, Record<string, string[]>>
   quality?: {
     forecastRecords?: number; observationRecords?: number
     matchedElementPairs30d?: number; fairCaseKeys30d?: number
@@ -43,8 +44,7 @@ const LEAD_OPTIONS: {value: Lead; label: string; short: string}[] = [
   {value: '12-24', label: '12–24 hours', short: '12–24h'},
   {value: '24-48', label: '24–48 hours', short: '24–48h'},
   {value: '48-72', label: '48–72 hours', short: '48–72h'},
-  {value: '72-120', label: '72–120 hours', short: '72–120h'},
-  {value: '120+', label: '120+ hours', short: '120+h'},
+  {value: '72-120', label: 'About 72 hours', short: '72h'},
 ]
 const COLOR: Record<string, string> = { NBS: '#168d87', NBE: '#4b70c5', GFS: '#d38b3e', NAM: '#8c66ad' }
 const FRIENDLY: Record<string, string> = {
@@ -66,6 +66,12 @@ const FILLER: Dashboard = {
     {id:'wsp',label:'Wind speed',unit:'kt'},{id:'gst',label:'Wind gust',unit:'kt'},
   ],
   fairScores:[], dailyScores:[],
+  comparisonProducts: {
+    tmp: {'0-12':['NBS','GFS','NAM'],'12-24':['NBS','GFS','NAM'],'24-48':['NBS','NBE','GFS','NAM'],'48-72':['NBS','NBE','GFS','NAM'],'72-120':['NBS','NBE','GFS','NAM']},
+    dpt: {'0-12':['NBS','GFS','NAM'],'12-24':['NBS','GFS','NAM'],'24-48':['NBS','NBE','GFS','NAM'],'48-72':['NBS','NBE','GFS','NAM'],'72-120':['NBS','NBE','GFS','NAM']},
+    wsp: {'0-12':['NBS','GFS','NAM'],'12-24':['NBS','GFS','NAM'],'24-48':['NBS','NBE','GFS','NAM'],'48-72':['NBS','NBE','GFS','NAM'],'72-120':['NBS','NBE','GFS','NAM']},
+    gst: {'24-48':['NBS','NBE'],'48-72':['NBS','NBE'],'72-120':['NBS','NBE']},
+  },
 }
 
 function formatUpdated(value: string|null) {
@@ -144,12 +150,14 @@ function App() {
   const allDaily=data.dailyScores||[]
   const selectedElement=data.elements.find(x=>x.id===element)
   const unit=selectedElement?.unit||'°F'
+  const comparedModels=data.comparisonProducts?.[element]?.[lead] || FILLER.comparisonProducts?.[element]?.[lead] || []
+  const availableLeads=LEAD_OPTIONS.filter(x=>(data.comparisonProducts?.[element]?.[x.value] || FILLER.comparisonProducts?.[element]?.[x.value] || []).length>=2)
   const stationName=station==='ALL'?'All seven stations':data.stations.find(x=>x.id===station)?.name||station
   const leadLabel=LEAD_OPTIONS.find(x=>x.value===lead)?.label||lead
   const scoreRows=useMemo(()=>allScores.filter(x=>
     x.station===station&&x.element===element&&x.days===days&&x.lead===lead).sort(compare),
     [allScores,station,element,days,lead])
-  const comparable = scoreRows.length===data.models.length && scoreRows.length>0
+  const comparable = scoreRows.length===comparedModels.length && comparedModels.length>=2
     && scoreRows.every(row=>row.n===scoreRows[0].n)
   const n = comparable ? scoreRows[0].n : 0
   const leader = comparable ? scoreRows[0] : undefined
@@ -158,19 +166,18 @@ function App() {
   const provisional = comparable && !enough
   const bestImprovement = leader && runnerUp && runnerUp.mae>0 ?
     100*(runnerUp.mae-leader.mae)/runnerUp.mae : null
-  const hasScores = allScores.length>0
   const isLegacy = !Array.isArray(data.fairScores)
   const stationRows=useMemo(()=>data.stations.map(s=>{
     const scores=allScores.filter(x=>x.station===s.id&&x.element===element&&x.days===days&&x.lead===lead).sort(compare)
-    const same=scores.length===data.models.length && scores.length>0 && scores.every(row=>row.n===scores[0].n)
+    const same=scores.length===comparedModels.length && comparedModels.length>=2 && scores.every(row=>row.n===scores[0].n)
     return {id:s.id,name:s.name,scores:same?scores:[],n:same?scores[0].n:0}
-  }),[allScores,data.stations,data.models.length,element,days,lead])
-  const leadChart=useMemo(()=>LEAD_OPTIONS.map(item=>{
+  }),[allScores,data.stations,comparedModels.length,element,days,lead])
+  const leadChart=useMemo(()=>availableLeads.map(item=>{
     const rows=allScores.filter(x=>x.station===station&&x.element===element&&x.days===days&&x.lead===item.value)
     const chartRow: Record<string,string|number|null>={name:item.short}
     data.models.forEach(m=>{chartRow[m.id]=rows.find(r=>r.model===m.id)?.mae??null})
     return chartRow
-  }),[allScores,data.models,station,element,days])
+  }),[allScores,data.models,station,element,days,availableLeads.length])
   const trendChart=useMemo(()=>{
     const threshold=new Date(Date.now() - days*86400000).toISOString().slice(0,10)
     const entries=allDaily.filter(x=>x.station===station&&x.element===element&&x.lead===lead&&x.day>=threshold)
@@ -245,12 +252,12 @@ function App() {
             <div className="filter-grid">
               <SelectField id="station" label="Where?" value={station} onChange={setStation} icon={MapPin}
                 options={[{value:'ALL',label:'All 7 stations · regional view'},...data.stations.map(x=>({value:x.id,label:x.id+' · '+x.name}))]}/>
-              <SelectField id="element" label="Weather element" value={element} onChange={setElement} icon={Thermometer}
+              <SelectField id="element" label="Weather element" value={element} onChange={x=>{setElement(x);if(x==='gst'&&(lead==='0-12'||lead==='12-24'))setLead('24-48')}} icon={Thermometer}
                 options={data.elements.map(x=>({value:x.id,label:x.label}))}/>
               <SelectField id="period" label="How recently?" value={String(days)} onChange={x=>setDays(Number(x))} icon={Clock3}
                 options={[{value:'7',label:'Past 7 days'},{value:'30',label:'Past 30 days'}]}/>
               <SelectField id="lead" label="Forecast lead time" value={lead} onChange={x=>setLead(x as Lead)} icon={Activity}
-                options={LEAD_OPTIONS.map(x=>({value:x.value,label:x.label}))}/>
+                options={availableLeads.map(x=>({value:x.value,label:x.label}))}/>
             </div>
             <p className="filter-hint"><Info size={14}/> Lead time is how far ahead the forecast was made. A 24–48 hour forecast was made roughly 1–2 days before the weather occurred.</p>
           </section>
@@ -268,22 +275,23 @@ function App() {
                     {enough?'This product has the lowest MAE among guidance verified on the same cases.':
                       provisional?'This product is currently lowest, but the sample is too small to identify a dependable leader.':
                       isLegacy?'The updated common-case comparison is being generated by the next data pipeline run.':
-                      'A ranking requires an observation and a forecast from each of the four guidance products for the same station, valid time and lead-time range.'}
+                      'A ranking requires an observation and forecasts from all products available in this comparison for the same station, time and lead range.'}
                   </p>
                   {leader&&<div className="result-mini"><span><MapPin size={14}/>{stationName}</span><span><Clock3 size={14}/>{days} days · {leadLabel}</span></div>}
                 </div>
                 <div className="leader-numbers">
                   <div className="leader-number"><span>Average error (MAE)</span><strong>{leader?metric(leader.mae):'—'} <small>{leader?unit:''}</small></strong><p>Lower is better</p></div>
-                  <div className="leader-number"><span>Identical verifying cases</span><strong>{comparable?n:'—'}</strong><p>Same sample for all four products</p></div>
+                  <div className="leader-number"><span>Identical verifying cases</span><strong>{comparable?n:'—'}</strong><p>Same sample for compared products</p></div>
                 </div>
               </div>
             </section>
             <div className="metrics-note">
-              <div><ShieldCheck size={18}/><span><strong>Fair comparison.</strong> Every listed model is scored against the same verifying station, time, and weather observation.</span></div>
+              <div><ShieldCheck size={18}/><span><strong>Fair comparison.</strong> All compared products are evaluated against identical station/time observations.</span></div>
               <button className="inline-link" onClick={()=>setTab('about')}>How scoring works <ArrowRight size={14}/></button>
             </div>
             <section className="surface scorecard">
               <SectionHeading kicker="01 · THE LEADERBOARD" title="Guidance ranked by accuracy" description="Average absolute error (MAE) is the main score. A smaller number means the forecast was closer to what happened."/>
+              <div className="models-compared">Comparing {comparedModels.map(friendly).join(' · ')} <span>({comparedModels.length} products)</span></div>
               {comparable?<div className="ranking-list">
                 <div className="rank-head"><span>GUIDANCE PRODUCT</span><span>AVERAGE ERROR · LOWER IS BETTER</span><span>MEAN BIAS</span><span>CLOSEST MOST OFTEN</span></div>
                 {scoreRows.map((row,i)=>{
@@ -301,7 +309,7 @@ function App() {
                 })}
                 <div className="ranking-footer"><span><Info size={15}/> {n} matched station/time cases per model · {confidence(n)}.</span>
                   {bestImprovement!==null&&bestImprovement>0&&<span>First vs. second: {metric(bestImprovement,1)}% lower MAE (descriptive only)</span>}</div>
-              </div>:<Placeholder title="Not enough shared verification cases yet" body="The archive is collecting guidance automatically. Results appear only when NBM Short, NBM Extended, GFS MOS and NAM MOS all have forecasts matched to the same observed weather event."/>}
+              </div>:<Placeholder title="Not enough shared verification cases yet" body="The archive is collecting guidance automatically. Results appear only when every product in the comparison has a forecast matched to the same observed weather event."/>}
             </section>
             <div className="split-panels">
               <section className="surface chart-panel"><SectionHeading kicker="02 · BY FORECAST LEAD" title="When does each model do best?" description="Average error at different forecast horizons. This helps distinguish short- from longer-range skill."/>
@@ -355,7 +363,7 @@ function App() {
             <article className="surface method-card"><span className="method-icon"><Target size={22}/></span><h2>MAE: average error</h2><p>Mean Absolute Error measures the average size of forecast misses, regardless of direction. Lower MAE means forecasts were closer to observations. That's how the leaderboard is ordered.</p></article>
             <article className="surface method-card"><span className="method-icon"><TrendingDown size={22}/></span><h2>Bias: which direction?</h2><p>Mean forecast minus observed value. Positive means guidance was too high (warmer, moister, windier). Negative means it was too low. A near-zero bias does not guarantee small errors.</p></article>
             <article className="surface method-card"><span className="method-icon"><BarChart3 size={22}/></span><h2>Closest most often</h2><p>The share of verifying cases where a product has the smallest absolute error. Ties split the credit. This complements MAE but is not the primary ranking metric.</p></article>
-            <article className="surface method-card"><span className="method-icon"><ShieldCheck size={22}/></span><h2>What makes a fair ranking?</h2><p>All four products must forecast the same station, weather element and valid time within the selected lead-time bucket. For multiple cycles in one bucket, the run nearest the bucket midpoint is used. The verifying observation is identical for every product.</p></article>
+            <article className="surface method-card"><span className="method-icon"><ShieldCheck size={22}/></span><h2>What makes a fair ranking?</h2><p>Every included product must forecast the same station, weather element and valid time within the selected lead-time bucket. For multiple cycles in one bucket, the run nearest the bucket midpoint is used. The verifying observation is identical for every product.</p></article>
           </div>
           <section className="surface caveat-box">
             <h2>Important limits to keep in mind</h2>
