@@ -1,0 +1,65 @@
+name: Archive and verify NBM QMD percentiles
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/nbm-qmd.yml'
+      - 'backend/nbm_qmd.py'
+      - 'backend/test_qmd.py'
+  schedule:
+    - cron: '47 9 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Number of archived 00Z cycles to sample (1–30)'
+        required: false
+        default: '3'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: qmd-point-archive
+  cancel-in-progress: false
+
+jobs:
+  qmd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ecCodes GRIB2 support
+        run: python -m pip install --disable-pip-version-check 'eccodes>=2.38,<3'
+      - name: Run offline percentile and deterministic verification tests
+        run: python -m unittest discover -s backend -p 'test_*.py' -v
+      - name: Sample genuine NOAA NBM QMD GRIB2 distributions
+        id: ingest
+        env:
+          BACKFILL_DAYS: ${{ github.event.inputs.days || '3' }}
+        run: |
+          set -o pipefail
+          python backend/nbm_qmd.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-qmd-job.log
+      - name: Store QMD source health and verified sample archive
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          {
+            echo 'NBM QMD point extraction status'
+            echo "UTC: $(date -u +%FT%TZ)"
+            echo 'Check last 80 log lines for source inventory or decoder errors:'
+            if [ -f /tmp/nbm-qmd-job.log ]; then tail -n 80 /tmp/nbm-qmd-job.log; else echo 'No extractor log'; fi
+          } > diagnostics/qmd-run.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/qmd-run.txt
+          if [ -f data/archive/qmd_forecasts.json ]; then git add data/archive/qmd_forecasts.json; fi
+          if [ -f public/data/qmd.json ]; then git add public/data/qmd.json; fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'data: archive real NBM QMD station percentiles and verification'
+            git pull --rebase origin main
+            git push origin HEAD:main
+          fi
