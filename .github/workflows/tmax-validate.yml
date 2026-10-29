@@ -35,6 +35,10 @@ jobs:
         run: |
           set -o pipefail
           python -m unittest discover -s backend -p 'test_*.py' -v 2>&1 | tee /tmp/tmax-tests.log
+      - name: Populate all four verified QMD cycles for chart density
+        run: |
+          set -o pipefail
+          python backend/nbm_qmd.py --days 2 2>&1 | tee /tmp/qmd-four-cycle.log
       - name: Archive and verify genuine 18-hour QMD Tmax
         run: |
           set -o pipefail
@@ -46,12 +50,16 @@ jobs:
           {
             echo 'Tmax pilot validation'
             echo "UTC: $(date -u +%FT%TZ)"
+            if [ -f /tmp/qmd-four-cycle.log ]; then echo 'Multi-cycle QMD:'; tail -n 100 /tmp/qmd-four-cycle.log; fi
             if [ -f /tmp/tmax-tests.log ]; then tail -n 100 /tmp/tmax-tests.log; fi
             if [ -f /tmp/tmax-ingest.log ]; then tail -n 100 /tmp/tmax-ingest.log; fi
           } > diagnostics/tmax-run.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add diagnostics/tmax-run.txt
+          for f in data/archive/qmd_forecasts.json public/data/qmd.json; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
           for f in data/archive/tmax_forecasts.json data/archive/metar_max6h.json public/data/tmax.json; do
             if [ -f "$f" ]; then git add "$f"; fi
           done
