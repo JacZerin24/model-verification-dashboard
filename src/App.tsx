@@ -37,6 +37,14 @@ type Dashboard = {
     warnings?: string[]; NBMPercentilesAvailable?: boolean
   }
 }
+type QmdScore = {
+ station:string; element:string; lead:number; days:number; n:number;
+ p50MAE:number; p50Bias:number; wis:number;
+ interval80Width:number; coverage80:number; coverage50:number;
+ p10Below:number; p25Below:number; p50Below:number; p75Below:number; p90Below:number;
+}
+type QmdData = { generatedAt:string|null; dataStatus:string; scores:QmdScore[];
+ quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[]} }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
 type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
 const LEAD_OPTIONS: {value: Lead; label: string; short: string}[] = [
@@ -124,6 +132,12 @@ function SectionHeading({kicker,title,description}:{kicker:string;title:string;d
 function App() {
   const [data,setData]=useState<Dashboard>(FILLER)
   const [loadError,setLoadError]=useState('')
+  const [qmd,setQmd]=useState<QmdData|null>(null)
+  const [qmdLoadError,setQmdLoadError]=useState('')
+  const [qmdStation,setQmdStation]=useState('ALL')
+  const [qmdElement,setQmdElement]=useState('tmp')
+  const [qmdLead,setQmdLead]=useState('12')
+  const [qmdDays,setQmdDays]=useState('7')
   const [loading,setLoading]=useState(true)
   const [refresh,setRefresh]=useState(0)
   const [tab,setTab]=useState<Tab>('rankings')
@@ -146,6 +160,16 @@ function App() {
     return()=>{mounted=false}
   },[refresh])
 
+  useEffect(()=>{
+    let active=true
+    fetch(import.meta.env.BASE_URL+'data/qmd.json?refresh='+refresh,{cache:'no-store'})
+      .then(response=>{if(!response.ok)throw Error('HTTP '+response.status);return response.json()})
+      .then((value:QmdData)=>{if(active&&Array.isArray(value.scores)){setQmd(value);setQmdLoadError('')}})
+      .catch(error=>{if(active){setQmdLoadError(String(error));setQmd(null)}})
+    return()=>{active=false}
+  },[refresh])
+  const qmdScore=(qmd?.scores||[]).find(x=>
+    x.station===qmdStation&&x.element===qmdElement&&x.lead===Number(qmdLead)&&x.days===Number(qmdDays))
   const allScores=data.fairScores||[]
   const allDaily=data.dailyScores||[]
   const selectedElement=data.elements.find(x=>x.id===element)
@@ -321,7 +345,7 @@ function App() {
                   <Placeholder title="Daily trends are building" body="This panel fills as comparable cases verify over multiple days."/>}
               </section>
             </div>
-            <div className="bottom-actions"><span><Info size={15}/> Currently available: NBM Short, NBM Extended, GFS MOS and NAM MOS. Raw GFS/NAM/ECMWF and NBM percentiles are not yet scored.</span>
+            <div className="bottom-actions"><span><Info size={15}/> Currently available: NBM Short, NBM Extended, GFS MOS and NAM MOS. Raw GFS/NAM/ECMWF are not yet scored; actual NBM QMD percentile verification is tracked separately.</span>
               <button className="download-action" onClick={exportCSV}><Download size={16}/> Download verified scores</button></div>
           </>:<>
             <section className="surface station-section">
