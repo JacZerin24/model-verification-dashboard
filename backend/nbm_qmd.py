@@ -93,7 +93,7 @@ def select_index(index):
     return selected
 
 
-def decode_points(message, element, percentile, cycle, lead, stations):
+def decode_points(message, element, percentile, cycle, lead, stations, temporal_max=False):
     import eccodes
 
     if not message.startswith(b"GRIB"):
@@ -103,9 +103,19 @@ def decode_points(message, element, percentile, cycle, lead, stations):
         short_name = str(eccodes.codes_get(gid, "shortName")).upper()
         # ecCodes normalizes GRIB2 2-m dewpoint as '2d'/'2D', whereas
         # the NBM wgrib2 inventory labels the same physical field 'DPT'.
-        permitted = {"TMP", "2T"} if element == "tmp" else {"DPT", "2D"}
+        permitted = ({"TMP", "2T", "MX2T", "TMAX"} if temporal_max else {"TMP", "2T"}) if element == "tmp" else {"DPT", "2D"}
         if short_name not in permitted:
             raise ValueError(f"Expected {sorted(permitted)}, got {short_name}")
+        if temporal_max:
+            # A Tmax percentile must encode an 18-hour statistical MAX interval.
+            # Reject ordinary 2-m temperatures and all other accumulation periods.
+            start = int(eccodes.codes_get_long(gid, "startStep"))
+            end = int(eccodes.codes_get_long(gid, "endStep"))
+            if end - start != 18 or end != lead:
+                raise ValueError(f"Expected 18h maximum ending f{lead}, got {start}-{end}")
+            statistical_type = int(eccodes.codes_get_long(gid, "typeOfStatisticalProcessing"))
+            if statistical_type != 2:
+                raise ValueError(f"Not a maximum statistical field: type {statistical_type}")
         # Validate GRIB product template percentile metadata rather than relying on
         # inventory text alone. Some encodings provide scaled value in 'percentileValue'.
         try:
