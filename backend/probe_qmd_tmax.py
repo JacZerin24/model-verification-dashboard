@@ -17,7 +17,8 @@ def main():
            "A MAX percentile is NOT automatically the NWS official daily high.",
            f"Source cycle: {iso(cycle)}"]
     cycle += timedelta(hours=6)
-    lines.append(f\"Alternative 06Z source cycle: {iso(cycle)}\")\n    for lead in (18,24,30,42,48,66,72):
+    lines.append(f"Alternative 06Z source cycle: {iso(cycle)}")
+    for lead in (18,24,30,42,48,66,72):
         url=source_url(cycle,lead)+".idx"
         try:
             inventory=get(url).decode("utf-8",errors="replace").splitlines()
