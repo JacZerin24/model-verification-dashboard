@@ -70,6 +70,14 @@ The original GitHub Actions collector only requested the latest MOS forecast run
 
 The continuously running workflow still adds newly issued runs; the leaderboard preserves its common-case sample requirements.
 
+## Which NBM percentile has been closest to observations?
+
+The percentile page now also ranks **P10, P25, P50, P75 and P90 by mean absolute error** against each station's observed instantaneous 2-m temperature/dew point. For each station/element/+12,+24,+36,+48h/7- or 30-day group, it also reports the percentage of cases on which each percentile was closest (with tied cases splitting credit), signed bias and actual recent validating observations beside each percentile prediction.
+
+Ranking percentiles as point forecasts is **descriptive**, not a proper assessment of quantile skill. Probabilistic calibration (observed fraction below each percentile, P10–P90/P25–P75 interval coverage, quantile loss and WIS) remains a separate component below the accuracy leaderboard.
+
+**Daily high temperatures (Tmax) are not yet included.** An observed high of 80°F must be verified against the matching 12/24-hour NBM maximum-temperature percentile field and a station maximum from that same interval. Instantaneous 2-m temperature at +12h is not a substitute for Tmax. See issue #3 for the next dataset.
+
 ## NBM QMD percentile verification (first implementation)
 
 The independent **Archive and verify NBM QMD percentiles** workflow collects the actual 00Z QMD GRIB2 CONUS fields from the public NOAA AWS archive. It uses the .idx inventory and HTTP range downloads rather than whole CONUS files. The initial scope is P10/P25/P50/P75/P90 for 2-m temperature and dew point, at +12, +24, +36 and +48 hours, sampled at seven LIX-area airports by nearest grid point.
