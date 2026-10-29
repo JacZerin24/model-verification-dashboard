@@ -119,7 +119,7 @@ export default function VerificationTimeSeries({cases,station,element,lead,days,
     <div className="verification-chart-head">
       <div><span className="eyebrow">01 · FORECASTS VS. VERIFIED OBSERVATIONS</span>
         <h2>Observed vs. guidance through time</h2>
-        <p>The dark line tracks actual observations. Colored lines show what the 00Z forecast cycle predicted for the same station, weather element and lead.</p></div>
+        <p>The dark line tracks actual observations. Colored lines show predictions from the corresponding 00, 06, 12, or 18 UTC NBM cycle for the same station, element and lead.</p></div>
       <div className="verification-chart-count"><strong>{rows.length}</strong><span>verified dates</span></div>
     </div>
     {station==='ALL'?<div className="verification-chart-empty"><Layers3 size={25}/>
