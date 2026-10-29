@@ -53,7 +53,7 @@ type QmdCase = VerificationCase & {
 }
 type QmdData = { generatedAt:string|null; dataStatus:string; scores:QmdScore[];
  recentCases?:QmdCase[]; timeseries?:VerificationCase[]; verificationType?:string;
- quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[];sourceCycles?:string} }
+ quality:{archivedQuantilePoints:number;completeVerifyingCases:number;distinctObservedStationWindows?:number;warnings:string[];sourceCycles?:string} }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
 type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
 const LEAD_OPTIONS: {value: Lead; label: string; short: string}[] = [
@@ -426,7 +426,7 @@ function App() {
                 <div>
                   <span className="eyebrow">02 · CLOSEST TO OBSERVED VALUE</span>
                   <h2>{qmdScore.closestByMAE===undefined?'Point-forecast ranking not generated yet':'P'+qmdScore.closestByMAE+' has been closest on average'}</h2>
-                  <p>Ranked by the average absolute difference between each percentile forecast and the observed {isTmax?'18-hour daytime maximum':qmdElement==='tmp'?'instantaneous temperature':'instantaneous dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} cases.</p>
+                  <p>Ranked by the average absolute difference between each percentile forecast and the observed {isTmax?'18-hour daytime maximum':qmdElement==='tmp'?'instantaneous temperature':'instantaneous dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} forecast cases. {isTmax&&<>Multiple forecast cycles can verify against one observed 18-hour period; there are {activeQmd?.quality.distinctObservedStationWindows??"a limited number of"} distinct station/window observations in the archive.</>}</p>
                 </div>
                 <span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Early sample · interpret cautiously'}</span>
               </div>
