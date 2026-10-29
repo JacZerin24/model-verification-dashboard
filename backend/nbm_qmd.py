@@ -124,8 +124,14 @@ def decode_points(message, element, percentile, cycle, lead, stations):
             nearest = eccodes.codes_grib_find_nearest(gid, meta["lat"], meta["lon"])
             # ecCodes returns a list of (lat, lon, value, distance, index).
             point = nearest[0]
-            value = float(point[2])
-            distance = float(point[3])
+            # ecCodes Python 2.x provides dicts with value/distance keys;
+            # older wrappers may return a five-element tuple.
+            if isinstance(point, dict):
+                value = float(point["value"])
+                distance = float(point["distance"])
+            else:
+                value = float(point[2])
+                distance = float(point[3])
             if not math.isfinite(value) or distance > 30:
                 continue
             fahrenheit = (value - 273.15) * 9 / 5 + 32
