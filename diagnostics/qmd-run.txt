@@ -1,5 +1,5 @@
 NBM QMD point extraction status
-UTC: 2026-10-29T06:38:42Z
+UTC: 2026-10-29T06:44:36Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
@@ -22,12 +22,12 @@ Downloading eccodes-2.50.0-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 89.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 96.1 MB/s  0:00:00
 Downloading eckitlib-2.5.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (36.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 129.1 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 115.2 MB/s  0:00:00
 Downloading findlibs-0.1.3-py3-none-any.whl (10 kB)
 Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 131.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 150.5 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
@@ -53,32 +53,18 @@ test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quan
 test_wis_nonnegative (test_qmd.QMDTests.test_wis_nonnegative) ... ok
 
 ----------------------------------------------------------------------
-Ran 18 tests in 0.003s
+Ran 18 tests in 0.002s
 
 OK
 Extractor:
 QMD 2026-10-28T00:00:00+00:00 f012: fetching source inventory
-WARNING 2026-10-28T00:00:00Z f012: KeyError: 2
+WARNING 2026-10-28T00:00:00Z f012: ValueError: Expected ['TMP'], got 2T
 QMD 2026-10-28T00:00:00+00:00 f024: fetching source inventory
-WARNING 2026-10-28T00:00:00Z f024: KeyError: 2
+WARNING 2026-10-28T00:00:00Z f024: ValueError: Expected ['TMP'], got 2T
 QMD 2026-10-28T00:00:00+00:00 f036: fetching source inventory
-WARNING 2026-10-28T00:00:00Z f036: KeyError: 2
+WARNING 2026-10-28T00:00:00Z f036: ValueError: Expected ['TMP'], got 2T
 QMD 2026-10-28T00:00:00+00:00 f048: fetching source inventory
-WARNING 2026-10-28T00:00:00Z f048: KeyError: 2
+WARNING 2026-10-28T00:00:00Z f048: ValueError: Expected ['TMP'], got 2T
 QMD 2026-10-27T00:00:00+00:00 f012: fetching source inventory
-WARNING 2026-10-27T00:00:00Z f012: KeyError: 2
+WARNING 2026-10-27T00:00:00Z f012: ValueError: Expected ['TMP'], got 2T
 QMD 2026-10-27T00:00:00+00:00 f024: fetching source inventory
-WARNING 2026-10-27T00:00:00Z f024: KeyError: 2
-QMD 2026-10-27T00:00:00+00:00 f036: fetching source inventory
-WARNING 2026-10-27T00:00:00Z f036: KeyError: 2
-QMD 2026-10-27T00:00:00+00:00 f048: fetching source inventory
-WARNING 2026-10-27T00:00:00Z f048: KeyError: 2
-QMD 2026-10-26T00:00:00+00:00 f012: fetching source inventory
-WARNING 2026-10-26T00:00:00Z f012: KeyError: 2
-QMD 2026-10-26T00:00:00+00:00 f024: fetching source inventory
-WARNING 2026-10-26T00:00:00Z f024: KeyError: 2
-QMD 2026-10-26T00:00:00+00:00 f036: fetching source inventory
-WARNING 2026-10-26T00:00:00Z f036: KeyError: 2
-QMD 2026-10-26T00:00:00+00:00 f048: fetching source inventory
-WARNING 2026-10-26T00:00:00Z f048: KeyError: 2
-QMD status: 0 quantile values; 0 verifying cases; 12 warnings
