@@ -1,0 +1,4 @@
+NBM QMD point extraction status
+UTC: 2026-10-29T06:36:42Z
+Check last 80 log lines for source inventory or decoder errors:
+No extractor log
