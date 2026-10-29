@@ -96,6 +96,35 @@ class PipelineTests(unittest.TestCase):
                    and x["lead"]=="24-48" and x["days"]==7)
         self.assertEqual(nbs["mae"], 1)
 
+
+    def test_short_range_compares_three_available_products(self):
+        from datetime import datetime, timezone
+        valid = "2026-10-21T00:00:00Z"
+        fcsts = [{"station":"KBTR","valid":valid,"init":"2026-10-20T12:00:00Z",
+                  "lead":12,"model":m,"tmp":v}
+                 for m,v in (("NBS",70),("GFS",72),("NAM",69))]
+        observations = [{"station":"KBTR","valid":valid,"tmp":70}]
+        scores, _, count = calculate_fair(fcsts, observations, datetime(2026,10,22,tzinfo=timezone.utc))
+        short = [x for x in scores if x["station"]=="KBTR" and x["days"]==7
+                 and x["element"]=="tmp" and x["lead"]=="12-24"]
+        self.assertEqual(count, 1)
+        self.assertEqual(len(short), 3)
+        self.assertEqual({x["model"] for x in short}, {"NBS","GFS","NAM"})
+
+    def test_wind_gust_compares_nbm_products_only(self):
+        from datetime import datetime, timezone
+        valid="2026-10-21T00:00:00Z"
+        forecasts=[{"station":"KBTR","valid":valid,"init":"2026-10-20T00:00:00Z",
+                    "lead":24,"model":m,"gst":value}
+                   for m,value in (("NBS",14),("NBE",18))]
+        observations=[{"station":"KBTR","valid":valid,"gst":15}]
+        scores, _, count=calculate_fair(forecasts, observations, datetime(2026,10,22,tzinfo=timezone.utc))
+        gust=[x for x in scores if x["station"]=="KBTR" and x["days"]==7
+              and x["element"]=="gst" and x["lead"]=="24-48"]
+        self.assertEqual(count,1)
+        self.assertEqual(len(gust),2)
+        self.assertEqual(gust[0]["model"],"NBS")
+
     def test_time_tolerance(self):
         obs = [{"valid": "2026-10-21T00:50:00Z", "tmp": 70}]
         self.assertIsNone(closest_observation(obs, "2026-10-21T00:00:00Z", "tmp"))
