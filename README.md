@@ -70,6 +70,14 @@ The original GitHub Actions collector only requested the latest MOS forecast run
 
 The continuously running workflow still adds newly issued runs; the leaderboard preserves its common-case sample requirements.
 
+## Verification time-series chart
+
+The NBM percentile page now leads with a station-specific **observed-versus-guidance time series**. The X axis is verifying valid time (Central Time); the Y axis is temperature or dew point in °F. Default traces are a thick observed line, NBM P50, and all available NBM Short/Extended, GFS MOS and NAM MOS traces, with semi-transparent P10–P90 and P25–P75 ranges. Users can turn bands off, reveal P10/P25/P75/P90 as individual lines, and click the legend chips to hide or restore any line. Hover/tap a date for all forecasts and their absolute errors versus the observation. On mobile, the plot scrolls horizontally rather than shrinking into illegibility.
+
+This is a **fixed-lead, one-station** chart, not a spliced multi-station or multi-lead spaghetti plot. Forecast lead is selectable at +12, +24, +36, or +48 hours. Model guidance is joined **only** when station, variable, original initialization, and valid time exactly match the QMD case. A missing product remains missing; no newer or different-lead forecasts are substituted. MOS labels are explicit to prevent confusing the GFS/NAM MOS text products with raw deterministic GFS/NAM.
+
+The main leaderboard remains directly under the chart, followed by real observed-versus-forecast example cases and calibration/WIS metrics. The available QMD source still verifies *instantaneous 2-m* temperature/dew point rather than a station's daily high; daily Tmax is a separate future dataset.
+
 ## Which NBM percentile has been closest to observations?
 
 The percentile page now also ranks **P10, P25, P50, P75 and P90 by mean absolute error** against each station's observed instantaneous 2-m temperature/dew point. For each station/element/+12,+24,+36,+48h/7- or 30-day group, it also reports the percentage of cases on which each percentile was closest (with tied cases splitting credit), signed bias and actual recent validating observations beside each percentile prediction.
