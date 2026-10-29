@@ -366,19 +366,67 @@ function App() {
               <button onClick={()=>setTab('rankings')}>View full rankings <ArrowRight size={16}/></button></div>
           </>}
         </>:tab==='percentiles'?<div className="secondary-page">
-          <div className="eyebrow"><span className="mini-bar"/> NBM · PROBABILISTIC VERIFICATION</div>
-          <h1>How well are NBM<br/><span>percentiles verifying?</span></h1>
-          <p className="page-subtitle">The eventual goal is to identify which NBM percentiles are most useful for each station and weather element—not just whether the median forecast is accurate.</p>
-          <section className="percentile-status"><div className="status-heading"><CircleAlert size={22}/><span>Actual QMD percentile verification is not active yet</span></div>
-            <p>The current station archive contains NBM Short and Extended text guidance, not the full gridded NBM P05–P95 quantile distributions. Percentile skill cannot be calculated from those records. This page will only show measured calibration once QMD ingestion and case matching are validated.</p>
-            <span className="safe-status"><ShieldCheck size={16}/> No fabricated percentile or coverage statistics</span>
+          <div className="eyebrow"><span className="mini-bar"/> NBM · QMD QUANTILE VERIFICATION</div>
+          <h1>Are NBM percentiles<br/><span>verifying accurately?</span></h1>
+          <p className="page-subtitle">Real P10, P25, P50, P75 and P90 gridded NBM QMD forecasts, measured against airport observations. This is about calibration and uncertainty—not simply which forecast looks most reasonable.</p>
+          <section className="filters" aria-label="Percentile verification settings">
+            <div className="filters-head"><div><SlidersHorizontal size={17}/><strong>Your percentile comparison</strong></div><span>Verified NOAA QMD guidance only</span></div>
+            <div className="filter-grid">
+              <SelectField id="qmd-station" label="Station" value={qmdStation} onChange={setQmdStation} icon={MapPin}
+                options={[{value:'ALL',label:'All seven stations'},...data.stations.map(x=>({value:x.id,label:x.id+' · '+x.name}))]}/>
+              <SelectField id="qmd-element" label="Element" value={qmdElement} onChange={setQmdElement} icon={Thermometer}
+                options={[{value:'tmp',label:'Temperature'},{value:'dpt',label:'Dew point'}]}/>
+              <SelectField id="qmd-period" label="Period" value={qmdDays} onChange={setQmdDays} icon={Clock3}
+                options={[{value:'7',label:'Past 7 days'},{value:'30',label:'Past 30 days'}]}/>
+              <SelectField id="qmd-lead" label="Forecast lead" value={qmdLead} onChange={setQmdLead} icon={Activity}
+                options={[12,24,36,48].map(x=>({value:String(x),label:x+' hours'}))}/>
+            </div>
+            <p className="filter-hint"><Info size={14}/> Initial QMD coverage: 00Z forecast cycles, four lead times, and nearest-gridpoint temperature/dew point. Not the same as the NBM text guidance on the main leaderboard.</p>
           </section>
+          {qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
+          {qmdScore?<div>
+            <div className="result-hero">
+              <div className="result-topline"><span className="eyebrow">MEASURED PROBABILISTIC VERIFICATION</span><span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Preliminary sample'}</span></div>
+              <div className="qmd-metrics">
+                <div><span>Inside P10–P90</span><strong>{metric(qmdScore.coverage80,1)}%</strong><small>Calibration target: 80%</small></div>
+                <div><span>Inside P25–P75</span><strong>{metric(qmdScore.coverage50,1)}%</strong><small>Calibration target: 50%</small></div>
+                <div><span>P50 average error</span><strong>{metric(qmdScore.p50MAE)} °F</strong><small>Lower is better</small></div>
+                <div><span>Verified cases</span><strong>{qmdScore.n}</strong><small>Complete quantile distributions</small></div>
+              </div>
+              <p className="qmd-disclaimer">Early results can fluctuate dramatically. Calibration and statistical skill need many independent verifying cases before drawing operational conclusions.</p>
+            </div>
+            <div className="split-panels">
+              <section className="surface">
+                <SectionHeading kicker="01 · RELIABILITY" title="Is each percentile calibrated?" description="A calibrated P10 should exceed the observed value around 10% of the time, P50 about 50%, and P90 about 90%."/>
+                <div className="qmd-table">
+                  {([10,25,50,75,90] as const).map(p=>{
+                    const measured=qmdScore[('p'+p+'Below') as keyof QmdScore] as number
+                    return <div className="qmd-table-row" key={p}><span>P{p}</span><div className="qmd-bar"><span style={{width:Math.min(100,measured)+'%'}}/></div><strong>{metric(measured,1)}%</strong><small>Target {p}%</small></div>
+                  })}
+                </div>
+              </section>
+              <section className="surface">
+                <SectionHeading kicker="02 · DISTRIBUTION SKILL" title="How useful is the spread?" description="The same observations are checked against multiple forecast quantiles, evaluating both interval width and misses."/>
+                <div className="qmd-secondary-metrics">
+                  <div><span>Weighted interval score</span><strong>{metric(qmdScore.wis)} °F</strong><small>Lower is better on comparable samples</small></div>
+                  <div><span>Average P10–P90 width</span><strong>{metric(qmdScore.interval80Width)} °F</strong><small>Typical uncertainty range</small></div>
+                  <div><span>P50 mean bias</span><strong>{signed(qmdScore.p50Bias)} °F</strong><small>Positive means too warm/moist</small></div>
+                </div>
+              </section>
+            </div>
+          </div>:<section className="percentile-status">
+            <div className="status-heading"><Clock3 size={22}/><span>No complete verifying QMD cases for these filters yet</span></div>
+            <p>{qmd?.quality.archivedQuantilePoints
+              ? qmd.quality.archivedQuantilePoints.toLocaleString()+' actual NOAA percentile station records are archived. This selection still requires complete matching observations.'
+              : 'The collector is retrieving NOAA QMD GRIB2 percentiles and validating their metadata. No percentile skill is displayed until complete forecasts and verifying METAR observations have been matched.'}</p>
+            <span className="safe-status"><ShieldCheck size={16}/> Only verified, observed percentile statistics are published</span>
+          </section>}
           <div className="percentile-grid">
-            <article className="surface percentile-card"><span className="step">01</span><h2>Which percentile performs best?</h2><p>Compare P10, P25, P50, P75 and P90 with observations using quantile loss. Report results by station, element and lead time.</p><span className="work-tag">QMD ingestion required</span></article>
-            <article className="surface percentile-card"><span className="step">02</span><h2>Is the NBM spread realistic?</h2><p>Check whether 50% and 80% forecast intervals contain observations at their expected frequencies. Separate calibration from sharpness.</p><span className="work-tag">Coverage verification required</span></article>
-            <article className="surface percentile-card"><span className="step">03</span><h2>When should forecasters adjust?</h2><p>Look for consistent underdispersion, warm/cold biases and forecast-regime dependencies once enough archived percentile cases exist.</p><span className="work-tag">Historical cases required</span></article>
+            <article className="surface percentile-card"><span className="step">P10 / P90</span><h2>Is the 80% range realistic?</h2><p>The central 80% interval should contain about 80% of observations over a sufficiently large sample.</p><span className="work-tag">Calibration and coverage</span></article>
+            <article className="surface percentile-card"><span className="step">P25 / P75</span><h2>Does the middle half verify?</h2><p>The central 50% range should capture about half of observations; overly narrow and overly broad intervals both have costs.</p><span className="work-tag">Spread and reliability</span></article>
+            <article className="surface percentile-card"><span className="step">WIS</span><h2>Does the whole forecast have skill?</h2><p>Weighted interval score rewards sharper uncertainty estimates when they remain accurate, and penalizes misses.</p><span className="work-tag">Proper distribution score</span></article>
           </div>
-          <div className="next-phase"><Target size={23}/><div><strong>Next development priority</strong><p>Archive real NBM QMD percentiles at each airport and compare their quantile scores and coverage to observed temperature, dew point and winds.</p></div></div>
+          <div className="next-phase"><Target size={23}/><div><strong>Data provenance</strong><p>NOAA public NBM QMD CONUS GRIB2 · 00Z cycles · nearest 2.5-km grid point · P10, P25, P50, P75 and P90 for temperature/dew point. Future releases add wind percentiles and further cycles.</p></div></div>
         </div>:<div className="secondary-page">
           <div className="eyebrow"><span className="mini-bar"/> VERIFICATION GUIDE</div>
           <h1>Understand the numbers.<br/><span>Trust the comparison.</span></h1>
