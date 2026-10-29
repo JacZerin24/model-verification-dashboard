@@ -1,0 +1,82 @@
+name: Validate and publish NBM daytime Tmax pilot
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmax-validate.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency:
+  group: tmax-pilot-validation
+  cancel-in-progress: true
+jobs:
+  tmax:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install ecCodes
+        run: python -m pip install --disable-pip-version-check 'eccodes>=2.38,<3'
+      - name: Run all offline verification tests
+        run: |
+          set -o pipefail
+          python -m unittest discover -s backend -p 'test_*.py' -v 2>&1 | tee /tmp/tmax-tests.log
+      - name: Archive and verify genuine 18-hour QMD Tmax
+        run: |
+          set -o pipefail
+          python backend/nbm_tmax.py --days 3 2>&1 | tee /tmp/tmax-ingest.log
+      - name: Save independent Tmax source and test diagnostics
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          {
+            echo 'Tmax pilot validation'
+            echo "UTC: $(date -u +%FT%TZ)"
+            if [ -f /tmp/tmax-tests.log ]; then tail -n 100 /tmp/tmax-tests.log; fi
+            if [ -f /tmp/tmax-ingest.log ]; then tail -n 100 /tmp/tmax-ingest.log; fi
+          } > diagnostics/tmax-run.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/tmax-run.txt
+          for f in data/archive/tmax_forecasts.json data/archive/metar_max6h.json public/data/tmax.json; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
+          git commit -m 'data: verify NBM QMD 18h maximum temperature pilot' || true
+          git pull --rebase origin main || true
+          git push origin HEAD:main || true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build dashboard with daytime Tmax mode
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist
+      - name: Deploy complete dashboard to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Record successful Tmax deployment
+        if: success()
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          mkdir -p diagnostics
+          printf 'Tmax pilot deployed successfully\nUTC: %s\nSite: %s\n' "$(date -u +%FT%TZ)" "$PAGE_URL" > diagnostics/tmax-pages-success.txt
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/tmax-pages-success.txt
+          git commit -m 'ci: record Tmax pilot deploy success' || true
+          git pull --rebase origin main || true
+          git push origin HEAD:main || true
