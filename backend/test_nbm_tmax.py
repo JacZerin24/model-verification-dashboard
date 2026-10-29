@@ -1,7 +1,7 @@
 """Offline verification tests for true 18h daytime maximum percentile fields."""
 import unittest
 from datetime import datetime, timezone
-from nbm_tmax import select_max_index, build_period_observations
+from nbm_tmax import select_max_index, build_period_observations, count_distinct_observed_windows
 
 class TmaxQmdTests(unittest.TestCase):
     def test_max_fields_exact_statistical_window(self):
@@ -18,6 +18,15 @@ class TmaxQmdTests(unittest.TestCase):
         self.assertEqual(set(fields),{10,25,50,75,90})
         self.assertEqual(fields[90][:2],(40,49))
         self.assertEqual(select_max_index(rows,48),{})
+
+    def test_unique_observed_windows_not_double_counted_across_cycles(self):
+        cases=[
+            {"station":"KBTR","valid":"2026-10-29T06:00:00Z","init":"2026-10-28T06:00:00Z"},
+            {"station":"KBTR","valid":"2026-10-29T06:00:00Z","init":"2026-10-27T06:00:00Z"},
+            {"station":"KMSY","valid":"2026-10-29T06:00:00Z","init":"2026-10-28T06:00:00Z"},
+        ]
+        self.assertEqual(count_distinct_observed_windows(cases),2)
+        self.assertEqual(count_distinct_observed_windows([]),0)
 
     def test_period_obs_requires_all_six_hour_reports(self):
         period="2026-10-29T06:00:00Z"
