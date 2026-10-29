@@ -57,7 +57,7 @@ class QMDTests(unittest.TestCase):
             for p,v in [(10,68),(25,70),(50,72),(75,74),(90,76)]
         ]
         obs = [{"station":"KBTR","valid":valid,"tmp":73}]
-        scores, n = verify(rows,obs,now)
+        scores, n, cases = verify(rows,obs,now)
         self.assertEqual(n,1)
         matched=[x for x in scores if x["station"]=="KBTR" and x["days"]==7]
         self.assertEqual(len(matched),1)
@@ -67,9 +67,53 @@ class QMDTests(unittest.TestCase):
         self.assertEqual(matched[0]["p50MAE"],1)
         self.assertGreater(matched[0]["wis"],0)
         rows.pop()
-        scores, n = verify(rows,obs,now)
+        scores, n, cases = verify(rows,obs,now)
         self.assertEqual(n,0)
         self.assertEqual(scores,[])
+
+
+    def test_closest_percentile_for_observed_80(self):
+        # Example is an instantaneous 2-m temperature observation, NOT Tmax.
+        now = datetime(2026, 10, 29, tzinfo=timezone.utc)
+        valid = "2026-10-28T12:00:00Z"
+        values = ((10,72),(25,76),(50,78),(75,81),(90,84))
+        rows = [
+            {"station":"KBTR","element":"tmp","init":"2026-10-28T00:00:00Z",
+             "valid":valid,"lead":12,"percentile":p,"value":v}
+            for p,v in values
+        ]
+        observations = [{"station":"KBTR","valid":valid,"tmp":80}]
+        scores, count, cases = verify(rows, observations, now)
+        self.assertEqual(count,1)
+        score = next(x for x in scores if x["station"]=="KBTR" and x["days"]==7)
+        self.assertEqual(score["closestByMAE"],75)
+        self.assertEqual(score["closestMostOften"],75)
+        ranked = score["closestRanking"]
+        self.assertEqual([x["percentile"] for x in ranked],[75,50,90,25,10])
+        self.assertEqual(ranked[0]["mae"],1)
+        self.assertEqual(ranked[0]["closestPct"],100)
+        self.assertEqual(cases[0]["observed"],80)
+        self.assertEqual(cases[0]["forecast"]["75"],81)
+        self.assertEqual(cases[0]["closest"],[75])
+
+    def test_closest_percentile_ties_share_credit(self):
+        now = datetime(2026, 10, 29, tzinfo=timezone.utc)
+        valid = "2026-10-28T12:00:00Z"
+        values = ((10,65),(25,70),(50,79),(75,81),(90,90))
+        rows = [
+            {"station":"KMSY","element":"tmp","init":"2026-10-28T00:00:00Z",
+             "valid":valid,"lead":12,"percentile":p,"value":v}
+            for p,v in values
+        ]
+        score_rows, count, details = verify(
+            rows, [{"station":"KMSY","valid":valid,"tmp":80}],now)
+        self.assertEqual(count,1)
+        score=next(x for x in score_rows if x["station"]=="KMSY" and x["days"]==7)
+        vals={r["percentile"]:r for r in score["closestRanking"]}
+        self.assertEqual(vals[50]["closestPct"],50)
+        self.assertEqual(vals[75]["closestPct"],50)
+        self.assertEqual(sum(r["closestPct"] for r in vals.values()),100)
+        self.assertEqual(details[0]["closest"],[50,75])
 
     def test_url_construction(self):
         cycle=datetime(2026,10,28,tzinfo=timezone.utc)
