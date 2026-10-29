@@ -92,6 +92,22 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Verify live GitHub Pages app in Chromium
+        id: browser_smoke
+        run: |
+          set -o pipefail
+          npm install --no-save --no-audit --no-fund playwright
+          npx playwright install --with-deps chromium
+          SMOKE_URL="https://jaczerin24.github.io/model-verification-dashboard/" node scripts/browser-smoke.mjs 2>&1 | tee /tmp/verify-browser.log
+
+      - name: Upload browser evidence if deployment is broken
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-browser-errors
+          path: diagnostics/browser-smoke*
+          if-no-files-found: ignore
+
       - name: Save sanitized build diagnostics if pipeline failed
         if: failure()
         env:
@@ -112,6 +128,10 @@ jobs:
             echo
             echo "Build output:"
             if [ -f /tmp/verify-build.log ]; then tail -n 100 /tmp/verify-build.log; else echo "No build log"; fi
+            echo
+            echo "Browser output:"
+            if [ -f diagnostics/browser-smoke.txt ]; then tail -n 120 diagnostics/browser-smoke.txt; fi
+            if [ -f /tmp/verify-browser.log ]; then tail -n 80 /tmp/verify-browser.log; fi
           } > diagnostics/last-failure.txt
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
