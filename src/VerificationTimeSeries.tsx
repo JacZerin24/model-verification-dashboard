@@ -96,6 +96,7 @@ function ValueTooltip({active,payload,unit}:{
 export default function VerificationTimeSeries({cases,station,element,lead,days,referenceTime}:{
   cases:VerificationCase[];station:string;element:string;lead:number;days:number;referenceTime:number
 }) {
+  const isTmax=element==='tmax18'
   const [showBands,setShowBands]=useState(true)
   const [showAllPercentiles,setShowAllPercentiles]=useState(false)
   const [visible,setVisible]=useState<Record<SeriesKey,boolean>>({
@@ -118,8 +119,8 @@ export default function VerificationTimeSeries({cases,station,element,lead,days,
   return <section className="surface verification-chart-card" aria-label="Observed versus forecast guidance time series">
     <div className="verification-chart-head">
       <div><span className="eyebrow">01 · FORECASTS VS. VERIFIED OBSERVATIONS</span>
-        <h2>Observed vs. guidance through time</h2>
-        <p>The dark line tracks actual observations. Colored lines show predictions from the corresponding 00, 06, 12, or 18 UTC NBM cycle for the same station, element and lead.</p></div>
+        <h2>{isTmax?'Observed daytime max vs. NBM percentiles':'Observed vs. guidance through time'}</h2>
+        <p>{isTmax?'The observed line is an 18-hour maximum assembled from three ASOS six-hour maximum-temperature groups. Colored lines show genuine NBM percentile forecasts over the same 18-hour period. These are not official calendar-day CLI highs.':'The dark line tracks actual observations. Colored lines show predictions from the corresponding 00, 06, 12, or 18 UTC NBM cycle for the same station, element and lead.'}</p></div>
       <div className="verification-chart-count"><strong>{rows.length}</strong><span>verified dates</span></div>
     </div>
     {station==='ALL'?<div className="verification-chart-empty"><Layers3 size={25}/>
@@ -172,7 +173,7 @@ export default function VerificationTimeSeries({cases,station,element,lead,days,
         </ResponsiveContainer>
       </div></div>
       <p className="verification-chart-foot"><Info size={15}/>
-        Hover or tap a date to see observed temperature, individual guidance values and forecast misses.
+        Hover or tap a date to see the observed {isTmax?'18-hour maximum':'temperature or dew point'}, individual percentile values and forecast misses.
         Only guidance with the <strong>identical initialization and valid time</strong> is drawn;
         missing or incompatible model runs are not interpolated.
         {rows.length<5?' Very few verifying dates have accumulated for this selection.':''}
