@@ -103,7 +103,7 @@ def decode_points(message, element, percentile, cycle, lead, stations, temporal_
         short_name = str(eccodes.codes_get(gid, "shortName")).upper()
         # ecCodes normalizes GRIB2 2-m dewpoint as '2d'/'2D', whereas
         # the NBM wgrib2 inventory labels the same physical field 'DPT'.
-        permitted = ({"TMP", "2T", "MX2T", "TMAX"} if temporal_max else {"TMP", "2T"}) if element == "tmp" else {"DPT", "2D"}
+        permitted = ({"TMP", "2T", "MX2T", "MAX_2T", "TMAX"} if temporal_max else {"TMP", "2T"}) if element == "tmp" else {"DPT", "2D"}
         if short_name not in permitted:
             raise ValueError(f"Expected {sorted(permitted)}, got {short_name}")
         if temporal_max:
