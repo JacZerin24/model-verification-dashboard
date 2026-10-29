@@ -147,3 +147,37 @@ footer{display:flex;justify-content:space-between;gap:15px;flex-wrap:wrap;border
 .qmd-table-row{grid-template-columns:40px 1fr 52px;gap:8px}
 .qmd-table-row>small{grid-column:2/-1;text-align:right}
 }
+
+
+/* Verification-first QMD view: point-forecast ranking and matched examples. */
+.qmd-accuracy-card,.qmd-examples{margin-bottom:18px;overflow:hidden}
+.qmd-accuracy-head{display:flex;align-items:flex-start;justify-content:space-between;gap:15px;padding:25px 25px 18px}
+.qmd-accuracy-head h2{font-size:23px;letter-spacing:-.55px;color:#183d4f;margin:11px 0 8px}
+.qmd-accuracy-head p{max-width:720px;font-size:12px;line-height:1.8;color:#697f8d}
+.qmd-accuracy-head>.tag{flex-shrink:0}
+.qmd-accuracy-table{padding-bottom:4px}
+.qmd-accuracy-columns,.qmd-accuracy-row{display:grid;grid-template-columns:1.1fr 1fr 1.1fr .7fr;align-items:center;gap:10px;padding:14px 25px}
+.qmd-accuracy-columns{background:#f4f8f9;color:#7d919e;font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.6px;border-block:1px solid #e5ecee}
+.qmd-accuracy-row{border-bottom:1px solid #e9eff1;font-size:12px;color:#566e7c}
+.qmd-accuracy-row:last-child{border-bottom:none}
+.qmd-accuracy-row.qmd-winner{background:#f1faf7}
+.qmd-accuracy-row>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qmd-accuracy-row strong{font-size:14px;color:#244859}
+.qmd-rank-number{font:600 11px 'IBM Plex Mono',monospace;color:#90a6ae;min-width:15px}
+.qmd-best{border-radius:5px;background:#d8f3e6;color:#177c67;padding:5px 7px;font-size:9px;font-weight:700}
+.qmd-explain{display:flex;gap:8px;align-items:flex-start;padding:15px 24px;border-top:1px solid #edf0f3;font-size:11px;color:#657f8b;line-height:1.7}
+.qmd-explain svg{margin-top:2px;flex-shrink:0;color:#248e85}
+.qmd-examples-scroll{overflow:auto}
+.qmd-examples table{border-collapse:collapse;width:100%;min-width:700px;text-align:left}
+.qmd-examples th{font:600 10px 'IBM Plex Mono',monospace;letter-spacing:.4px;background:#f5f8f9;color:#8095a0;border-block:1px solid #e6edf0;padding:12px 14px;white-space:nowrap}
+.qmd-examples td{font-size:12px;border-bottom:1px solid #ecf1f2;padding:13px 14px;white-space:nowrap;color:#365367}
+.qmd-examples td:first-child strong{display:block;color:#25495c}
+.qmd-examples td:first-child small{display:block;font-size:10px;color:#8399a6;margin-top:5px}
+.qmd-examples td.qmd-cell-nearest{color:#0c806f;font-weight:800;background:#e3f7ef}
+.qmd-examples td.qmd-nearest-label{font-weight:800;color:#167d70}
+@media(max-width:1050px){.qmd-accuracy-head{flex-wrap:wrap}}
+@media(max-width:660px){.qmd-accuracy-columns{display:none}
+.qmd-accuracy-row{grid-template-columns:1fr 1fr;gap:9px 13px;padding:14px 18px}
+.qmd-accuracy-row>div{grid-column:1/-1}.qmd-accuracy-head{padding:20px 18px 14px}
+.qmd-accuracy-head h2{font-size:19px}.qmd-explain{padding:13px 18px}
+}
