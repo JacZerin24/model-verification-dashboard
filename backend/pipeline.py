@@ -255,6 +255,104 @@ def calculate(forecasts, observations, now):
     return scores, latest, recent_obs, recent_pairs[-8000:], matched
 
 
+
+def calculate_fair(forecasts, observations, now):
+    """Rank guidance on identical station/valid/element cases within each lead bin.
+
+    For each product and verifying time choose the model cycle with lead closest
+    to the center of that bin. A case is included ONLY when all required model
+    products have forecasts and one verifying observation. This prevents
+    'best model' claims based on different samples of weather situations.
+    """
+    observed = defaultdict(list)
+    for row in observations:
+        if row.get("station") in STATIONS:
+            observed[row["station"]].append(row)
+    for rows in observed.values():
+        rows.sort(key=lambda item: item["valid"])
+    model_ids = set(MODELS)
+    # Keyed by station, element, valid time, lead bucket, model.
+    selected = {}
+    for f in forecasts:
+        if f.get("station") not in STATIONS or f.get("model") not in model_ids:
+            continue
+        try:
+            valid_dt = dt(f["valid"])
+            lead_hours = float(f["lead"])
+        except (ValueError, KeyError, TypeError):
+            continue
+        if not (now - timedelta(days=30) <= valid_dt <= now - timedelta(minutes=10)):
+            continue
+        for name, (lo, hi) in LEADS.items():
+            if name == "all" or not (lo <= lead_hours < hi):
+                continue
+            # A fixed reference lead per bin makes selection reproducible.
+            center = (lo + hi) / 2 if hi < 900 else lo
+            for element in ELEMENTS:
+                if f.get(element) is None:
+                    continue
+                key = (f["station"], element, f["valid"], name, f["model"])
+                rank = (abs(lead_hours - center), -dt(f["init"]).timestamp())
+                previous = selected.get(key)
+                if previous is None or rank < previous[0]:
+                    selected[key] = (rank, f[element])
+    grouped = defaultdict(dict)
+    for (station, element, valid, lead, model), (_, forecast_value) in selected.items():
+        grouped[(station, element, valid, lead)][model] = forecast_value
+
+    scores = defaultdict(list)
+    by_day = defaultdict(list)
+    now7 = now - timedelta(days=7)
+    common_count = 0
+    for (station, element, valid, lead), forecasts_by_model in grouped.items():
+        if len(forecasts_by_model) != len(model_ids):
+            continue
+        observation = closest_observation(observed[station], valid, element)
+        if observation is None:
+            continue
+        common_count += 1
+        errors = {model: value - observation[element]
+                  for model, value in forecasts_by_model.items()}
+        best_abs = min(abs(value) for value in errors.values())
+        winners = [model for model, err in errors.items()
+                   if math.isclose(abs(err), best_abs, abs_tol=1e-8)]
+        for model, error in errors.items():
+            win = 1.0 / len(winners) if model in winners else 0.0
+            for group_station in (station, "ALL"):
+                for days in (7, 30):
+                    if days == 7 and dt(valid) < now7:
+                        continue
+                    scores[(group_station, element, days, lead, model)].append((error, win))
+                by_day[(group_station, element, lead, valid[:10], model)].append((error, win))
+
+    fair_scores = []
+    for (station, element, days, lead, model), observations_used in scores.items():
+        errors = [error for error, _ in observations_used]
+        n = len(errors)
+        fair_scores.append({
+            "station": station, "element": element, "days": days,
+            "lead": lead, "model": model, "n": n,
+            "mae": round(sum(abs(err) for err in errors) / n, 3),
+            "rmse": round(math.sqrt(sum(err ** 2 for err in errors) / n), 3),
+            "bias": round(sum(errors) / n, 3),
+            "winRate": round(100 * sum(win for _, win in observations_used) / n, 1),
+        })
+    fair_scores.sort(key=lambda r: (r["station"], r["element"], r["days"],
+                                     r["lead"], r["mae"], r["model"]))
+
+    daily_scores = []
+    for (station, element, lead, day, model), observations_used in by_day.items():
+        errors = [err for err, _ in observations_used]
+        daily_scores.append({
+            "station": station, "element": element, "lead": lead,
+            "day": day, "model": model, "n": len(errors),
+            "mae": round(sum(abs(err) for err in errors) / len(errors), 3),
+        })
+    daily_scores.sort(key=lambda r: (r["station"], r["element"], r["lead"],
+                                     r["day"], r["model"]))
+    return fair_scores, daily_scores, common_count
+
+
 def run(offline=False):
     now = utcnow()
     cutoff = iso(now - timedelta(days=35))
@@ -283,6 +381,7 @@ def run(offline=False):
     forecasts = merge(forecasts, new_forecasts, ("station", "model", "init", "valid"), cutoff)
     observations = merge(observations, new_obs, ("station", "valid"), cutoff)
     scores, latest, recent_obs, recent_pairs, matched = calculate(forecasts, observations, now)
+    fair_scores, daily_scores, common_count = calculate_fair(forecasts, observations, now)
     write_json(ARCHIVE / "forecasts.json", forecasts)
     write_json(ARCHIVE / "observations.json", observations)
     write_json(OUTPUT, {
@@ -292,11 +391,14 @@ def run(offline=False):
         "models": [{"id": code, **meta} for code, meta in MODELS.items()],
         "elements": [{"id": code, **meta} for code, meta in ELEMENTS.items()],
         "leadBins": list(LEADS),
-        "scores": scores, "latestForecasts": latest,
+        "scores": scores, "fairScores": fair_scores, "dailyScores": daily_scores,
+        "rankingMethod": "all-four-products-common-cases",
+        "latestForecasts": latest,
         "recentObservations": recent_obs, "recentPairs": recent_pairs,
         "quality": {
             "forecastRecords": len(forecasts), "observationRecords": len(observations),
-            "matchedElementPairs30d": matched, "warnings": warnings,
+            "matchedElementPairs30d": matched, "fairCaseKeys30d": common_count,
+            "warnings": warnings,
             "observationToleranceMinutes": 40, "archiveDays": 35,
             "NBMPercentilesAvailable": False,
         },
@@ -305,7 +407,7 @@ def run(offline=False):
             "observations": "IEM ASOS/METAR archive",
         },
     })
-    print(f"Published {len(scores)} scores, {matched} pairs, {len(warnings)} warnings")
+    print(f"Published {len(fair_scores)} common-case scores, {common_count} matched case keys; {len(warnings)} warnings")
     for warning in warnings:
         print("WARNING:", warning)
 
