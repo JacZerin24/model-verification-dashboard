@@ -1,62 +1,75 @@
-# Model Verification Lab · Gulf South
+# Guidance / Verify — Gulf South weather model skill
 
-A station-focused, automatically updating model verification website for the NWS New Orleans/Baton Rouge area. Built with React, TypeScript, Vite, a Python standard-library collector/verifier, GitHub Actions, and GitHub Pages.
+Public, automatically updating, station-based **verification leaderboard** answering:
 
-**Status: v0.1 deterministic-style station guidance verification.** The website does not claim NBM QMD percentile verification or raw HRRR/GFS skill results. QMD ingestion is a future phase.
+> Which guidance has been closest to actual observations recently, for this weather element, location and forecast lead?
 
-## Website and first-time setup
+**Live site:** https://jaczerin24.github.io/model-verification-dashboard/
 
-After Pages is enabled and a workflow has completed:
+## The verification-first design
 
-https://jaczerin24.github.io/model-verification-dashboard/
+- Select seven-station Gulf South region or KBTR, KMSY, KHDC, KNEW, KASD, KMCB or KGPT individually.
+- Choose temperature, dew point, wind speed or gust, past 7/30 days, and matching forecast lead.
+- See the **lowest MAE (mean absolute error)** guidance at the top; lower is better.
+- Examine bias (positive means too high), percentage of cases with smallest error (ties split credit), trends, lead dependence and station-by-station scores.
+- Each model uses the **same station/valid-time cases** in a given lead/element comparison. Sample sizes appear prominently, with **preliminary** labels for fewer than 30 common cases.
+- This is not a forecast display. Empty states are explicit until forecasts verify.
 
-1. Open repository **Settings → Pages → Build and deployment**, select **GitHub Actions** for Source. This one-time setting cannot be enabled using the standard workflow token.
-2. Open **Actions → Update verification data and publish dashboard → Run workflow**, or let the initial push run automatically.
-3. Watch the workflow logs for data source and deployment status. The dashboard initially contains **no invented data**; verification scores appear when archived forecasts reach their valid times and observations arrive.
+## Guidance genuinely supported
 
-## Implemented
+| Product | Status | Important distinction |
+| --- | --- | --- |
+| NBM Short (NBS) | Active | Station text guidance |
+| NBM Extended (NBE) | Active at overlapping longer leads | Station text guidance, not the full QMD distribution |
+| GFS MOS | Active | Postprocessed statistical guidance, NOT raw deterministic GFS |
+| NAM MOS | Active | Postprocessed statistical guidance, NOT raw deterministic NAM |
+| Raw GFS, NAM, HRRR, RAP, ECMWF | Planned | Separate GRIB2 point data ingestion needed |
+| NBM QMD P05–P95 percentiles | Planned | Actual quantile data required for calibration scores |
 
-- Seven stations: KBTR, KMSY, KHDC, KNEW, KASD, KMCB, KGPT
-- NBM Short (IEM NBS), NBM Extended (NBE), GFS MOS, and NAM MOS
-- 2-m temperature, dew point (degrees Fahrenheit), wind speed and gust (knots)
-- Forecast run/valid time stored per station forecast vintage; no rewriting older forecasts with new runs
-- IEM ASOS/METAR observations, matched to nearest report within ±40 minutes, without interpolation
-- MAE, RMSE, bias and sample sizes for 7/30-day windows and lead-time bins
-- Interactive station/element/time/lead filters, model ranking, recent forecast traces and CSV export
-- Automated schedule eight times daily (scheduled Actions may be delayed)
+Available products vary legitimately by forecast element and lead:
+- Temperature, dew point and sustained wind for 0–24 hours: NBS, GFS MOS, NAM MOS. NBE begins at longer leads.
+- Temperature, dew point and wind at 24–72 hours and approximately +72h: NBS, NBE, GFS MOS, NAM MOS.
+- Wind gust for 24h and beyond where overlapping: NBS and NBE only. Ingested GFS/NAM MOS text has no gust values.
+- Lead/element combinations without at least two comparable products are not offered.
 
-## Sources and scientific limitations
+## Scientific verification method
 
-- IEM MOS: https://mesonet.agron.iastate.edu/mos/
-- IEM ASOS/METAR: https://mesonet.agron.iastate.edu/request/download.phtml
-- NOAA NBM: https://vlab.noaa.gov/web/mdl/nbm
+1. Archive forecasts by original station, model, **initialization and valid time**. Later cycles never overwrite previous forecast vintages.
+2. Use IEM ASOS/METAR values; select the nearest qualifying observation within ±40 minutes (without interpolation).
+3. Within each lead-time bucket, use one forecast per model and station/valid time, preferring the forecast lead nearest the bucket midpoint (most recent initialization breaks ties).
+4. Only score a common case when **every participating product** has a forecast for the identical station/element/valid time and an observation exists.
+5. Compare every model using the same verifying case sample. This replaces earlier potentially misleading unmatched sample rankings.
+6. MAE = mean absolute error; RMSE = root mean square error; bias = mean(forecast minus observation). Closest percentage shares tied wins between products.
+7. Regional pooled results count station/time pairs, which are not fully spatially independent. Fewer than 30 shared cases are marked preliminary. Even larger samples do not establish statistical significance.
 
-**GFS MOS and NAM MOS are postprocessed station forecasts, not raw GFS/NAM output.** NBS/NBE are NBM text guidance, not gridded QMD percentile forecasts. There is no inferred NBM P10/P90 coverage in this release.
+Lead bins do not necessarily compare identical initialization times. Wind representativeness and averaging definitions need additional quality control. The rolling archive retains 35 days, and the dashboard offers the last 7 or 30 days.
 
-Error = forecast minus observation; MAE = mean absolute error; RMSE = root mean squared error; bias = mean error. Each product currently has its own available verifying sample, so cross-model skill rankings are descriptive rather than common-case skill comparisons. The JSON archive retains a rolling 35 days; displayed scores cover 7 or 30 days. Times are UTC in the archive and America/Chicago in the UI.
+## Software
 
-The nearest available METAR within ±40 minutes verifies each valid time. Missing data is excluded. Gust and sustained wind forecasts may have averaging and station-exposure differences; this MVP does not adjust for them. Daily extrema and QPF are not yet scored because their verification periods require special treatment.
+- React + TypeScript + Vite + Recharts frontend in src/
+- Standard-library Python collection, matching and scoring in backend/pipeline.py
+- Offline unit tests in backend/test_pipeline.py
+- Rolling forecast and METAR archives in data/archive/
+- Public verification payload in public/data/dashboard.json (fairScores, dailyScores, comparisonProducts)
+- Scheduled GitHub workflow in .github/workflows/update-and-deploy.yml, eight times per day
 
-## Local development
-
-Requirements: Python 3.11+ and Node 20+.
+Local setup (Node.js 20+, Python 3.11+):
 
 ~~~bash
 npm install
 npm run dev
-python -m unittest discover -s backend -p "test_*.py" -v
-python backend/pipeline.py             # requires internet
-python backend/pipeline.py --offline  # process existing archive
+python -m unittest discover -s backend -p 'test_*.py' -v
+python backend/pipeline.py
 npm run build
 ~~~
 
-The dev frontend loads public/data/dashboard.json. The GitHub Actions workflow generates this JSON, commits the rolling station archive, builds the frontend, and deploys the built site to Pages.
+## Next scientific milestones
 
-## Planned milestones
+1. **NBM percentiles**: source verified QMD P05–P95 GRIB2 forecasts per station/lead and calculate interval coverage, quantile loss and WIS using actual observations.
+2. **Raw deterministic guidance**: extract GFS, NAM, HRRR, RAP and ECMWF at station coordinates, preserving model type, cycle, interpolation and availability time.
+3. **Statistical confidence**: uncertainty intervals, stratification by weather regime and season, and more archive history.
+4. **More elements**: high/low temperatures and precipitation, with correct valid periods and observation-window definitions.
 
-1. Validate per-station field completeness, surface source health, and add **common-case** intermodel comparisons.
-2. Add raw deterministic HRRR/RAP/GFS point extraction from archived GRIB2 datasets.
-3. Ingest NBM QMD P05–P95 quantiles by cycle and projection; calculate nominal interval coverage, calibration/PIT, quantile loss and WIS from real quantiles.
-4. Add seasonal and weather-regime diagnostics and scalable archival storage.
+Source data: https://mesonet.agron.iastate.edu/mos/ and https://mesonet.agron.iastate.edu/request/download.phtml
 
-Independent research preview. Not an official NWS operational product. Source data and scheduled jobs can be delayed.
+Independent research, not an official NWS product. Data and GitHub Actions may be late or incomplete.
