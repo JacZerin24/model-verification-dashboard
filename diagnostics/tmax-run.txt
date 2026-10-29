@@ -1,5 +1,23 @@
 Tmax pilot validation
-UTC: 2026-10-29T21:24:22Z
+UTC: 2026-10-29T21:27:42Z
+Multi-cycle QMD:
+QMD 2026-10-29T06:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T06:00:00+00:00 f012: fetching source inventory
 test_max_fields_exact_statistical_window (test_nbm_tmax.TmaxQmdTests.test_max_fields_exact_statistical_window) ... ok
 test_period_obs_requires_all_six_hour_reports (test_nbm_tmax.TmaxQmdTests.test_period_obs_requires_all_six_hour_reports) ... ok
 test_asos_parsing (test_pipeline.PipelineTests.test_asos_parsing) ... ok
@@ -34,29 +52,3 @@ test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationT
 Ran 29 tests in 0.006s
 
 OK
-Tmax 2026-10-29T06:00:00Z f024: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-29T06:00:00Z f048: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-29T06:00:00Z f072: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-28T06:00:00Z f024: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-28T06:00:00Z f048: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-28T06:00:00Z f072: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-27T06:00:00Z f024: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-27T06:00:00Z f048: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-10-27T06:00:00Z f072: retrieving
-Decoded 35 Tmax percentile points
-METAR 6-hour maxima KBTR: 35
-METAR 6-hour maxima KMSY: 35
-METAR 6-hour maxima KHDC: 35
-METAR 6-hour maxima KNEW: 35
-METAR 6-hour maxima KASD: 35
-METAR 6-hour maxima KMCB: 35
-METAR 6-hour maxima KGPT: 35
-18h Tmax: 315 percentile values, 21 complete verifying cases; 0 warnings
