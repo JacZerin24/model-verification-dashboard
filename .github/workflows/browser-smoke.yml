@@ -39,6 +39,12 @@ jobs:
       - name: Visit production-style Pages using Chromium
         id: smoke
         run: node scripts/browser-smoke.mjs
+      - name: Check publicly deployed Pages with Chromium
+        id: production_smoke
+        env:
+          SMOKE_URL: https://jaczerin24.github.io/model-verification-dashboard/
+        run: node scripts/browser-smoke.mjs
+
       - name: Upload screenshot and browser errors
         if: always()
         uses: actions/upload-artifact@v4
