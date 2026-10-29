@@ -145,6 +145,21 @@ def fetch_mos(station, model):
     return parse_mos(json.loads(get_text(url)), station, model)
 
 
+
+def fetch_historical_mos(station, model, start, end):
+    """IEM documented bulk download; recover original historical forecast cycles."""
+    params = urllib.parse.urlencode({
+        "station": station, "model": model, "format": "csv",
+        "sts": iso(start), "ets": iso(end),
+    })
+    url = "https://mesonet.agron.iastate.edu/cgi-bin/request/mos.py?" + params
+    text = get_text(url)
+    rows = list(csv.DictReader(io.StringIO(text)))
+    if not rows or "runtime" not in rows[0] or "ftime" not in rows[0]:
+        raise ValueError(f"Historical MOS response invalid for {station} {model}")
+    return parse_mos({"data": rows}, station, model)
+
+
 def parse_asos(text, station):
     lines = [line for line in text.splitlines() if line.strip() and not line.startswith("#")]
     records = []
@@ -164,8 +179,8 @@ def parse_asos(text, station):
     return records
 
 
-def fetch_asos(station, meta, now):
-    start = now - timedelta(days=5)
+def fetch_asos(station, meta, now, days=5):
+    start = now - timedelta(days=days)
     end = now + timedelta(days=1)
     params = [
         ("station", meta["iem"]), ("network", meta["network"]),
@@ -375,13 +390,28 @@ def calculate_fair(forecasts, observations, now):
     return fair_scores, daily_scores, common_count
 
 
-def run(offline=False):
+def run(offline=False, backfill_days=0):
     now = utcnow()
     cutoff = iso(now - timedelta(days=35))
     forecasts = read_archive("forecasts.json")
     observations = read_archive("observations.json")
     new_forecasts, new_obs, warnings = [], [], []
     if not offline:
+        if backfill_days:
+            # IEM MOS archive can be backfilled, including original historic runs.
+            # Overlap a few days before the verification window for longer leads.
+            start = now - timedelta(days=min(35, backfill_days + 5))
+            end = now - timedelta(hours=1)
+            for station in STATIONS:
+                for model in MODELS:
+                    try:
+                        historic = fetch_historical_mos(station, model, start, end)
+                        if not historic:
+                            raise ValueError("No archived station forecasts returned")
+                        new_forecasts.extend(historic)
+                        print(f"Historical MOS {station} {model}: {len(historic)}", flush=True)
+                    except (RuntimeError, ValueError, KeyError) as exc:
+                        warnings.append(f"History {station} {model}: {str(exc)[:130]}")
         for station in STATIONS:
             for model in MODELS:
                 try:
@@ -393,7 +423,7 @@ def run(offline=False):
                 except (RuntimeError, ValueError, KeyError, json.JSONDecodeError) as exc:
                     warnings.append(f"{station} {model}: {str(exc)[:130]}")
             try:
-                rows = fetch_asos(station, STATIONS[station], now)
+                rows = fetch_asos(station, STATIONS[station], now, days=min(35, backfill_days + 5) if backfill_days else 5)
                 if not rows:
                     raise ValueError("No station observations returned")
                 new_obs.extend(rows)
@@ -438,5 +468,9 @@ def run(offline=False):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--offline", action="store_true", help="Regenerate from archives without network access")
+    parser.add_argument("--backfill-days", type=int, default=0,
+                        help="Recover historical IEM model runs and ASOS observations (up to 30 days)")
     args = parser.parse_args()
-    run(offline=args.offline)
+    if not 0 <= args.backfill_days <= 30:
+        parser.error("--backfill-days must be between 0 and 30")
+    run(offline=args.offline, backfill_days=args.backfill_days)
