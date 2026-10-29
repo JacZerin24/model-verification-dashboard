@@ -30,6 +30,7 @@ LEADS = (12, 24, 36, 48)
 VARIABLES = {"tmp": "TMP", "dpt": "DPT"}
 LABELS = {"tmp": "Temperature", "dpt": "Dew point"}
 UTC = timezone.utc
+_NEAREST_CACHE = {}  # grid fingerprint, station -> index, point lat/lon, distance
 
 
 def source_url(cycle: datetime, lead: int):
@@ -120,18 +121,26 @@ def decode_points(message, element, percentile, cycle, lead, stations):
         except KeyError:
             raise ValueError("GRIB height metadata unavailable")
         out = []
+        # All CONUS QMD quantile messages use the same grid. ecCodes nearest
+        # searches are expensive; cache grid cell indexes and use constant-time
+        # element reads for subsequent percentiles, cycles and lead times.
+        grid_key = (
+            eccodes.codes_get_long(gid, "numberOfPoints"),
+            eccodes.codes_get_long(gid, "gridDefinitionTemplateNumber"),
+            eccodes.codes_get_long(gid, "Ni") if eccodes.codes_is_defined(gid, "Ni") else -1,
+            eccodes.codes_get_long(gid, "Nj") if eccodes.codes_is_defined(gid, "Nj") else -1,
+        )
         for station, meta in stations.items():
-            nearest = eccodes.codes_grib_find_nearest(gid, meta["lat"], meta["lon"])
-            # ecCodes returns a list of (lat, lon, value, distance, index).
-            point = nearest[0]
-            # ecCodes Python 2.x provides dicts with value/distance keys;
-            # older wrappers may return a five-element tuple.
-            if isinstance(point, dict):
-                value = float(point["value"])
-                distance = float(point["distance"])
-            else:
-                value = float(point[2])
-                distance = float(point[3])
+            cache_key = (grid_key, station)
+            if cache_key not in _NEAREST_CACHE:
+                point = eccodes.codes_grib_find_nearest(gid, meta["lat"], meta["lon"])[0]
+                if isinstance(point, dict):
+                    index, distance = int(point["index"]), float(point["distance"])
+                else:
+                    index, distance = int(point[4]), float(point[3])
+                _NEAREST_CACHE[cache_key] = (index, distance)
+            index, distance = _NEAREST_CACHE[cache_key]
+            value = float(eccodes.codes_get_double_element(gid, "values", index))
             if not math.isfinite(value) or distance > 30:
                 continue
             fahrenheit = (value - 273.15) * 9 / 5 + 32
