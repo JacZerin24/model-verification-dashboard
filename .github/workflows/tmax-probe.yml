@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/tmax-probe.yml'
+      - 'backend/probe_qmd_tmax.py'
   workflow_dispatch:
 permissions:
   contents: write
