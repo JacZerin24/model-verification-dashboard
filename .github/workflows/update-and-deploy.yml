@@ -67,12 +67,18 @@ jobs:
           node-version: '22'
 
       - name: Install frontend dependencies
-        run: npm install --no-audit --no-fund
+        id: install
+        run: |
+          set -o pipefail
+          npm install --no-audit --no-fund 2>&1 | tee /tmp/verify-npm.log
 
       - name: Typecheck and build frontend
         env:
           GITHUB_PAGES: 'true'
-        run: npm run build
+        id: build
+        run: |
+          set -o pipefail
+          npm run build 2>&1 | tee /tmp/verify-build.log
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
@@ -85,3 +91,30 @@ jobs:
       - name: Deploy to Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Save sanitized build diagnostics if pipeline failed
+        if: failure()
+        env:
+          INSTALL_OUTCOME: ${{ steps.install.outcome }}
+          BUILD_OUTCOME: ${{ steps.build.outcome }}
+          DEPLOY_OUTCOME: ${{ steps.deployment.outcome }}
+        run: |
+          mkdir -p diagnostics
+          {
+            echo "GitHub Pages deployment diagnostic"
+            echo "UTC: $(date -u +%FT%TZ)"
+            echo "Install result: $INSTALL_OUTCOME"
+            echo "Build result: $BUILD_OUTCOME"
+            echo "Deploy result: $DEPLOY_OUTCOME"
+            echo
+            echo "NPM output:"
+            if [ -f /tmp/verify-npm.log ]; then tail -n 80 /tmp/verify-npm.log; else echo "No npm log"; fi
+            echo
+            echo "Build output:"
+            if [ -f /tmp/verify-build.log ]; then tail -n 100 /tmp/verify-build.log; else echo "No build log"; fi
+          } > diagnostics/last-failure.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add diagnostics/last-failure.txt
+          git commit -m "ci: capture failed deployment diagnostics" || true
+          git push origin HEAD:main || true
