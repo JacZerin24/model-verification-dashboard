@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from nbm_qmd import (
+    available_qmd_cycles,
     LEADS, PERCENTILES, attach_same_cycle_guidance, interval_score, parse_index, quantile_loss,
     select_index, source_url, verify, weighted_interval_score,
 )
@@ -146,6 +147,16 @@ class QMDTests(unittest.TestCase):
         result, counts = attach_same_cycle_guidance(cases,[])
         self.assertEqual(result[0]["guidance"],{})
         self.assertTrue(all(v==0 for v in counts.values()))
+
+    def test_available_four_cycles_and_latency(self):
+        from datetime import timedelta
+        now = datetime(2026, 10, 29, 16, 0, tzinfo=timezone.utc)
+        cycles = available_qmd_cycles(now, 2)
+        self.assertIn(datetime(2026, 10, 29, 6, tzinfo=timezone.utc), cycles)
+        self.assertNotIn(datetime(2026, 10, 29, 12, tzinfo=timezone.utc), cycles)
+        self.assertIn(datetime(2026, 10, 28, 18, tzinfo=timezone.utc), cycles)
+        self.assertEqual(len(cycles), 6)
+        self.assertTrue(all(x <= now - timedelta(hours=9) for x in cycles))
 
     def test_url_construction(self):
         cycle=datetime(2026,10,28,tzinfo=timezone.utc)
