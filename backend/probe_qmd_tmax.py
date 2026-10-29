@@ -32,7 +32,23 @@ def main():
                 lines.extend([x for x in inventory if ":MAX:" in x or ":TMAX:" in x][:10])
         except Exception as exc:
             lines.append(f"f{lead:03d} ERROR {type(exc).__name__}: {str(exc)[:300]}")
-    out=Path(__file__).resolve().parents[1]/"diagnostics"/"tmax-inventory.txt"
+    # Alternative source check: archive of station-based NBM probabilistic text
+    # forecasts, which may supply MAX percentile data separately from QMD GRIB2.
+    try:
+        import json
+        from pipeline import get_text
+        url="https://mesonet.agron.iastate.edu/api/1/mos.json?station=KBTR&model=NBP"
+        response=json.loads(get_text(url))
+        lines.append("\\nIEM NBP station percentile API availability:")
+        lines.append("Root keys: "+str(list(response)[:20]))
+        schema=response.get("schema",[])
+        lines.append("Columns: "+str([x.get("name",str(x)) if isinstance(x,dict) else str(x) for x in schema][:120]))
+        rows=response.get("data",[])
+        lines.append("Rows: "+str(len(rows)))
+        lines.append("First data sample: "+str(rows[:1])[:1300])
+    except Exception as exc:
+        lines.append(f"IEM NBP source probe ERROR {type(exc).__name__}: {str(exc)[:250]}")
+\n    out=Path(__file__).resolve().parents[1]/"diagnostics"/"tmax-inventory.txt"
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text("\n".join(lines)+"\n",encoding="utf-8")
     print("\n".join(lines[:70]),flush=True)
