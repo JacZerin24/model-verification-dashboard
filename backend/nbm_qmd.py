@@ -78,7 +78,7 @@ def select_index(index):
     selected = {}
     for description, start, end in index:
         # Ignore max/min temperature percentile accumulation fields.
-        if any(term in description.lower() for term in ("max-", "min-", "max ", "min ")):
+        if re.search(r"\b(?:max|min)(?:-|(?:imum)?\b)", description.lower()):
             continue
         for element, grib_name in VARIABLES.items():
             if not re.search(rf":{grib_name}:2 m above ground:", ":" + description):
