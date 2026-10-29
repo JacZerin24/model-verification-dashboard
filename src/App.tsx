@@ -38,7 +38,7 @@ type Dashboard = {
   }
 }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
-type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120' | '120+'
+type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
 const LEAD_OPTIONS: {value: Lead; label: string; short: string}[] = [
   {value: '0-12', label: '0–12 hours', short: '0–12h'},
   {value: '12-24', label: '12–24 hours', short: '12–24h'},
@@ -131,7 +131,7 @@ function App() {
   const [station,setStation]=useState('ALL')
   const [element,setElement]=useState('tmp')
   const [days,setDays]=useState(7)
-  const [lead,setLead]=useState<Lead>('24-48')
+  const [lead,setLead]=useState<Lead>('0-12')
   useEffect(()=>{
     let mounted=true
     setLoading(true)
@@ -314,7 +314,7 @@ function App() {
             <div className="split-panels">
               <section className="surface chart-panel"><SectionHeading kicker="02 · BY FORECAST LEAD" title="When does each model do best?" description="Average error at different forecast horizons. This helps distinguish short- from longer-range skill."/>
                 {leadChart.some(row=>data.models.some(m=>row[m.id]!==null))?<PerformanceChart data={leadChart} models={data.models} unit={unit} xFormatter={x=>x} />:
-                  <Placeholder title="Lead-time breakdown will appear here" body="The comparison needs matched observations across all four guidance products for each lead-time range."/>}
+                  <Placeholder title="Lead-time breakdown will appear here" body="The comparison needs matched observations from every participating product for that forecast lead range."/>}
               </section>
               <section className="surface chart-panel"><SectionHeading kicker="03 · RECENT TREND" title="Has accuracy been changing?" description="Daily mean absolute error for the selected station, element and forecast lead."/>
                 {trendChart.length>0?<PerformanceChart data={trendChart} models={data.models} unit={unit} xFormatter={x=>new Date(String(x)+'T12:00:00Z').toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'UTC'})}/>:
@@ -325,7 +325,7 @@ function App() {
               <button className="download-action" onClick={exportCSV}><Download size={16}/> Download verified scores</button></div>
           </>:<>
             <section className="surface station-section">
-              <SectionHeading kicker="STATION COMPARISON" title="Which guidance has verified best at each station?" description="Each station's ranking uses the same cases across the four guidance products. Small samples are marked as preliminary."/>
+              <SectionHeading kicker="STATION COMPARISON" title="Which guidance has verified best at each station?" description="At each station, every participating product is scored on the same verifying cases. Small samples are marked preliminary."/>
               <div className="station-table-wrapper"><table className="station-table">
                 <thead><tr><th>STATION</th><th>LOWEST ERROR</th><th>MAE</th><th>VERIFIED CASES</th><th>ASSESSMENT</th></tr></thead>
                 <tbody>{stationRows.map(row=><tr key={row.id}>
