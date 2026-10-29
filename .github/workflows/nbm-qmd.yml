@@ -19,7 +19,7 @@ on:
       days:
         description: 'Recent UTC dates of 00/06/12/18Z cycles to sample (1–30)'
         required: false
-        default: '7'
+        default: '2'
 
 permissions:
   contents: write
@@ -53,7 +53,7 @@ jobs:
       - name: Sample genuine NOAA NBM QMD GRIB2 distributions
         id: ingest
         env:
-          BACKFILL_DAYS: ${{ github.event.inputs.days || '7' }}
+          BACKFILL_DAYS: ${{ github.event.inputs.days || '2' }}
         run: |
           set -o pipefail
           python backend/nbm_qmd.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-qmd-job.log
