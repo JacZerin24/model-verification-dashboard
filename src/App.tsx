@@ -142,6 +142,8 @@ function App() {
   const [data,setData]=useState<Dashboard>(FILLER)
   const [loadError,setLoadError]=useState('')
   const [qmd,setQmd]=useState<QmdData|null>(null)
+  const [tmaxData,setTmaxData]=useState<QmdData|null>(null)
+  const [tmaxLoadError,setTmaxLoadError]=useState('')
   const [qmdLoadError,setQmdLoadError]=useState('')
   const [qmdStation,setQmdStation]=useState('KBTR')
   const [qmdElement,setQmdElement]=useState('tmp')
@@ -177,9 +179,19 @@ function App() {
       .catch(error=>{if(active){setQmdLoadError(String(error));setQmd(null)}})
     return()=>{active=false}
   },[refresh])
-  const qmdScore=(qmd?.scores||[]).find(x=>
+  useEffect(()=>{
+    let active=true
+    fetch(import.meta.env.BASE_URL+'data/tmax.json?refresh='+refresh,{cache:'no-store'})
+      .then(response=>{if(!response.ok)throw Error('HTTP '+response.status);return response.json()})
+      .then((value:QmdData)=>{if(active&&Array.isArray(value.scores)){setTmaxData(value);setTmaxLoadError('')}})
+      .catch(error=>{if(active){setTmaxLoadError(String(error));setTmaxData(null)}})
+    return()=>{active=false}
+  },[refresh])
+  const isTmax=qmdElement==='tmax18'
+  const activeQmd=isTmax?tmaxData:qmd
+  const qmdScore=(activeQmd?.scores||[]).find(x=>
     x.station===qmdStation&&x.element===qmdElement&&x.lead===Number(qmdLead)&&x.days===Number(qmdDays))
-  const qmdExamples=(qmd?.recentCases||[])
+  const qmdExamples=(activeQmd?.recentCases||[])
     .filter(x=>(qmdStation==='ALL'||x.station===qmdStation)&&
       x.element===qmdElement&&x.lead===Number(qmdLead)&&
       new Date(x.valid).getTime()>=Date.now()-Number(qmdDays)*86400000)
@@ -389,18 +401,19 @@ function App() {
             <div className="filter-grid">
               <SelectField id="qmd-station" label="Station" value={qmdStation} onChange={setQmdStation} icon={MapPin}
                 options={[{value:'ALL',label:'All seven stations'},...data.stations.map(x=>({value:x.id,label:x.id+' · '+x.name}))]}/>
-              <SelectField id="qmd-element" label="Element" value={qmdElement} onChange={setQmdElement} icon={Thermometer}
-                options={[{value:'tmp',label:'Temperature'},{value:'dpt',label:'Dew point'}]}/>
+              <SelectField id="qmd-element" label="Element" value={qmdElement} onChange={value=>{setQmdElement(value);setQmdLead(value==='tmax18'?'24':'12')}} icon={Thermometer}
+                options={[{value:'tmp',label:'Temperature (instantaneous)'},{value:'dpt',label:'Dew point (instantaneous)'},{value:'tmax18',label:'Daytime high (18-hour period)'}]}/>
               <SelectField id="qmd-period" label="Period" value={qmdDays} onChange={setQmdDays} icon={Clock3}
                 options={[{value:'7',label:'Past 7 days'},{value:'30',label:'Past 30 days'}]}/>
               <SelectField id="qmd-lead" label="Forecast lead" value={qmdLead} onChange={setQmdLead} icon={Activity}
-                options={[12,24,36,48].map(x=>({value:String(x),label:x+' hours'}))}/>
+                options={(isTmax?[24,48,72]:[12,24,36,48]).map(x=>({value:String(x),label:x+' hours'}))}/>
             </div>
-            <p className="filter-hint"><Info size={14}/> QMD data covers instantaneous 2-m temperature/dew point, not daily maximum or minimum temperatures. Collector supports 00/06/12/18 UTC; currently published cycles: {qmd?.quality.sourceCycles||'awaiting update'}. Each forecast is verified against observations at its own valid time.</p>
+            <p className="filter-hint"><Info size={14}/> {isTmax?'Daytime high is the NBM 18-hour temperature maximum, compared to maxima assembled from three six-hour ASOS reports. It is not the official NWS CLI calendar-day high.':'Instantaneous 2-m temperature/dew point. Collector supports 00/06/12/18 UTC.'} Published cycles: {activeQmd?.quality.sourceCycles||'awaiting archive update'}.</p>
           </section>
-          {qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
+          {isTmax&&tmaxLoadError&&<div className="alert warning"><CircleAlert size={18}/> 18-hour Tmax verification has not been published yet. Forecast and observation validation are still required.</div>}
+          {!isTmax&&qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
           <VerificationTimeSeries
-            cases={qmd?.timeseries||qmd?.recentCases||[]}
+            cases={activeQmd?.timeseries||activeQmd?.recentCases||[]}
             station={qmdStation}
             element={qmdElement}
             lead={Number(qmdLead)}
@@ -413,7 +426,7 @@ function App() {
                 <div>
                   <span className="eyebrow">02 · CLOSEST TO OBSERVED VALUE</span>
                   <h2>{qmdScore.closestByMAE===undefined?'Point-forecast ranking not generated yet':'P'+qmdScore.closestByMAE+' has been closest on average'}</h2>
-                  <p>Ranked by the average absolute difference between each percentile forecast and the actual observed {qmdElement==='tmp'?'temperature':'dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} cases.</p>
+                  <p>Ranked by the average absolute difference between each percentile forecast and the observed {isTmax?'18-hour daytime maximum':qmdElement==='tmp'?'instantaneous temperature':'instantaneous dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} cases.</p>
                 </div>
                 <span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Early sample · interpret cautiously'}</span>
               </div>
@@ -439,7 +452,7 @@ function App() {
                   <td className="qmd-nearest-label">{x.closest.map(p=>'P'+p).join(' / ')}</td>
                 </tr>)}</tbody>
               </table></div>:<Placeholder title="Observed examples will appear here" body="No complete percentile forecasts and matching temperature observations are available for this selection yet."/>}
-              <p className="qmd-explain"><Info size={15}/> These compare <strong>instantaneous 2-m temperature or dew point at the forecast valid time</strong> with a nearby METAR. They do <strong>not</strong> represent daily observed high temperatures; verifying highs requires separate NBM maximum-temperature percentile guidance and a matched daily high observation.</p>
+              <p className="qmd-explain"><Info size={15}/> {isTmax?<>These compare actual NBM <strong>18-hour maximum-temperature percentiles</strong> with three matching ASOS six-hour maximum reports. This is a period-matched daytime proxy, <strong>not the official NWS daily CLI maximum.</strong></>:<>These compare <strong>instantaneous 2-m temperature or dew point at the forecast valid time</strong> with a nearby METAR, not daily observed high temperatures.</>}</p>
             </section>
             <div className="result-hero">
               <div className="result-topline"><span className="eyebrow">MEASURED PROBABILISTIC VERIFICATION</span><span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Preliminary sample'}</span></div>
@@ -472,8 +485,8 @@ function App() {
             </div>
           </div>:<section className="percentile-status">
             <div className="status-heading"><Clock3 size={22}/><span>No complete verifying QMD cases for these filters yet</span></div>
-            <p>{qmd?.quality.archivedQuantilePoints
-              ? qmd.quality.archivedQuantilePoints.toLocaleString()+' actual NOAA percentile station records are archived. This selection still requires complete matching observations.'
+            <p>{activeQmd?.quality.archivedQuantilePoints
+              ? activeQmd.quality.archivedQuantilePoints.toLocaleString()+' actual NOAA percentile station records are archived. This selection still requires complete matching observations.'
               : 'The collector is retrieving NOAA QMD GRIB2 percentiles and validating their metadata. No percentile skill is displayed until complete forecasts and verifying METAR observations have been matched.'}</p>
             <span className="safe-status"><ShieldCheck size={16}/> Only verified, observed percentile statistics are published</span>
           </section>}
@@ -482,7 +495,7 @@ function App() {
             <article className="surface percentile-card"><span className="step">P25 / P75</span><h2>Does the middle half verify?</h2><p>The central 50% range should capture about half of observations; overly narrow and overly broad intervals both have costs.</p><span className="work-tag">Spread and reliability</span></article>
             <article className="surface percentile-card"><span className="step">WIS</span><h2>Does the whole forecast have skill?</h2><p>Weighted interval score rewards sharper uncertainty estimates when they remain accurate, and penalizes misses.</p><span className="work-tag">Proper distribution score</span></article>
           </div>
-          <div className="next-phase"><Target size={23}/><div><strong>Data provenance</strong><p>NOAA public NBM QMD CONUS GRIB2 · published cycles: {qmd?.quality.sourceCycles||'awaiting update'} · nearest 2.5-km grid point · P10/P25/P50/P75/P90 for instantaneous temperature and dew point. Maximum-temperature verification is tracked separately.</p></div></div>
+          <div className="next-phase"><Target size={23}/><div><strong>Data provenance</strong><p>NOAA public NBM QMD CONUS GRIB2 · {isTmax?'18-hour statistical MAX verified with three ASOS 6-hour maxima':'instantaneous 2-m temperature/dew point'} · published cycles: {activeQmd?.quality.sourceCycles||'awaiting update'} · nearest 2.5-km grid point · P10/P25/P50/P75/P90.</p></div></div>
         </div>:<div className="secondary-page">
           <div className="eyebrow"><span className="mini-bar"/> VERIFICATION GUIDE</div>
           <h1>Understand the numbers.<br/><span>Trust the comparison.</span></h1>
