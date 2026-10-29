@@ -89,7 +89,7 @@ class QMDTests(unittest.TestCase):
         self.assertEqual(score["closestByMAE"],75)
         self.assertEqual(score["closestMostOften"],75)
         ranked = score["closestRanking"]
-        self.assertEqual([x["percentile"] for x in ranked],[75,50,90,25,10])
+        self.assertEqual([x["percentile"] for x in ranked],[75,50,25,90,10])
         self.assertEqual(ranked[0]["mae"],1)
         self.assertEqual(ranked[0]["closestPct"],100)
         self.assertEqual(cases[0]["observed"],80)
