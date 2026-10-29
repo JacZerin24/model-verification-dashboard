@@ -2,7 +2,7 @@
 import unittest
 from datetime import datetime, timezone
 
-from pipeline import calculate, closest_observation, merge, number, parse_asos, parse_mos
+from pipeline import calculate, calculate_fair, closest_observation, merge, number, parse_asos, parse_mos
 
 
 class PipelineTests(unittest.TestCase):
@@ -47,6 +47,54 @@ class PipelineTests(unittest.TestCase):
         score = next(x for x in scores if x["lead"] == "24-48" and x["days"] == 7)
         self.assertEqual(score["bias"], 3)
         self.assertEqual(score["mae"], 3)
+
+
+    def test_common_case_requires_all_models(self):
+        from datetime import datetime, timezone
+        base = {"station": "KBTR", "valid": "2026-10-21T00:00:00Z",
+                "lead": 24, "tmp": 70}
+        forecasts = [{**base, "model": model,
+                      "init": "2026-10-20T00:00:00Z"}
+                     for model in ("NBS", "NBE", "GFS")]
+        obs = [{"station": "KBTR", "valid": base["valid"], "tmp": 70}]
+        scores, daily, count = calculate_fair(forecasts, obs, datetime(2026,10,22,tzinfo=timezone.utc))
+        self.assertEqual(scores, [])
+        self.assertEqual(count, 0)
+
+    def test_common_case_scores_identical_samples_and_wins(self):
+        from datetime import datetime, timezone
+        base = {"station": "KBTR", "valid": "2026-10-21T00:00:00Z",
+                "lead": 24, "init": "2026-10-20T00:00:00Z"}
+        fcsts = [{**base, "model": model, "tmp": val}
+                 for model, val in (("NBS",72), ("NBE",75), ("GFS",73), ("NAM",69))]
+        observations = [{"station": "KBTR", "valid": base["valid"], "tmp": 70}]
+        scores, daily, count = calculate_fair(fcsts, observations, datetime(2026,10,22,tzinfo=timezone.utc))
+        sample = [row for row in scores if row["station"] == "KBTR"
+                  and row["element"] == "tmp" and row["days"] == 7
+                  and row["lead"] == "24-48"]
+        self.assertEqual(count, 1)
+        self.assertEqual(len(sample), 4)
+        self.assertEqual({row["n"] for row in sample}, {1})
+        self.assertEqual(next(x["mae"] for x in sample if x["model"]=="NAM"), 1)
+        self.assertEqual(next(x["winRate"] for x in sample if x["model"]=="NAM"), 100)
+        self.assertTrue(any(x["station"] == "ALL" for x in scores))
+
+    def test_common_case_selects_nearest_lead_center(self):
+        from datetime import datetime, timezone
+        valid = "2026-10-21T00:00:00Z"
+        fcsts = [{"station": "KBTR", "valid": valid, "lead": 24, "tmp": 99,
+                  "model": "NBS", "init": "2026-10-20T00:00:00Z"},
+                 {"station": "KBTR", "valid": valid, "lead": 35, "tmp": 71,
+                  "model": "NBS", "init": "2026-10-19T13:00:00Z"}]
+        for model in ("NBE", "GFS", "NAM"):
+            fcsts.append({"station": "KBTR", "valid": valid, "lead": 36, "tmp": 70,
+                          "model": model, "init": "2026-10-19T12:00:00Z"})
+        obs = [{"station": "KBTR", "valid": valid, "tmp": 70}]
+        scores, _, _ = calculate_fair(fcsts, obs, datetime(2026,10,22,tzinfo=timezone.utc))
+        nbs = next(x for x in scores if x["station"]=="KBTR"
+                   and x["model"]=="NBS" and x["element"]=="tmp"
+                   and x["lead"]=="24-48" and x["days"]==7)
+        self.assertEqual(nbs["mae"], 1)
 
     def test_time_tolerance(self):
         obs = [{"valid": "2026-10-21T00:50:00Z", "tmp": 70}]
