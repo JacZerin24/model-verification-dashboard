@@ -24,7 +24,7 @@ Public, automatically updating, station-based **verification leaderboard** answe
 | GFS MOS | Active | Postprocessed statistical guidance, NOT raw deterministic GFS |
 | NAM MOS | Active | Postprocessed statistical guidance, NOT raw deterministic NAM |
 | Raw GFS, NAM, HRRR, RAP, ECMWF | Planned | Separate GRIB2 point data ingestion needed |
-| NBM QMD P05–P95 percentiles | Planned | Actual quantile data required for calibration scores |
+| NBM QMD P10/P25/P50/P75/P90 | Pilot collector implemented | Real GRIB2 byte-range extraction; verified percentile scores display only when complete cases exist |
 
 Available products vary legitimately by forecast element and lead:
 - Temperature, dew point and sustained wind for 0–24 hours: NBS, GFS MOS, NAM MOS. NBE begins at longer leads.
@@ -62,6 +62,23 @@ python -m unittest discover -s backend -p 'test_*.py' -v
 python backend/pipeline.py
 npm run build
 ~~~
+
+
+## Historical backfill and why a new installation initially showed one day
+
+The original GitHub Actions collector only requested the latest MOS forecast run, so the first day's verification archive was tiny even when a 7/30-day filter was selected. The separate **Backfill 30 days of archived station verification** workflow uses IEM's documented historical MOS endpoint (original model runs and timestamps) and downloads up to 35 days of ASOS reports. It is idempotent and can be manually rerun under Actions. Backfilled cases are actual historical forecasts, not synthetic or hindsight-reconstructed forecasts.
+
+The continuously running workflow still adds newly issued runs; the leaderboard preserves its common-case sample requirements.
+
+## NBM QMD percentile verification (first implementation)
+
+The independent **Archive and verify NBM QMD percentiles** workflow collects the actual 00Z QMD GRIB2 CONUS fields from the public NOAA AWS archive. It uses the .idx inventory and HTTP range downloads rather than whole CONUS files. The initial scope is P10/P25/P50/P75/P90 for 2-m temperature and dew point, at +12, +24, +36 and +48 hours, sampled at seven LIX-area airports by nearest grid point.
+
+Files: backend/nbm_qmd.py, backend/test_qmd.py, .github/workflows/nbm-qmd.yml. The 00Z GRIB may not be available until several hours after initialization. The workflow defaults to validating one previous cycle and supports an explicit 1–30 cycle backfill in the GitHub Actions manual dispatch.
+
+After complete five-quantile sets are matched to observed METAR temperature/dew point values within 40 minutes, public/data/qmd.json publishes empirical P10–P90 and P25–P75 coverage (nominal 80/50%), rank/PIT-style empirical CDF checks at P10/P25/P50/P75/P90, P50 MAE/bias, quantile loss and weighted interval score. The percentile page does **not** manufacture results when the archived QMD fields have not decoded successfully or no observations have verified.
+
+Scientific notes: the QMD P50 point forecast is not necessarily identical to NBM deterministic guidance; 00Z QMD is not comparable with hourly MOS without matching issuance/availability and verifying windows. Only compare proper scores over identical cases. A low number of cases is preliminary.
 
 ## Next scientific milestones
 
