@@ -33,9 +33,13 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install ecCodes GRIB2 support
-        run: python -m pip install --disable-pip-version-check 'eccodes>=2.38,<3'
+        run: |
+          set -o pipefail
+          python -m pip install --disable-pip-version-check 'eccodes>=2.38,<3' 2>&1 | tee /tmp/qmd-install.log
       - name: Run offline percentile and deterministic verification tests
-        run: python -m unittest discover -s backend -p 'test_*.py' -v
+        run: |
+          set -o pipefail
+          python -m unittest discover -s backend -p 'test_*.py' -v 2>&1 | tee /tmp/qmd-tests.log
       - name: Sample genuine NOAA NBM QMD GRIB2 distributions
         id: ingest
         env:
@@ -51,7 +55,9 @@ jobs:
             echo 'NBM QMD point extraction status'
             echo "UTC: $(date -u +%FT%TZ)"
             echo 'Check last 80 log lines for source inventory or decoder errors:'
-            if [ -f /tmp/nbm-qmd-job.log ]; then tail -n 80 /tmp/nbm-qmd-job.log; else echo 'No extractor log'; fi
+            if [ -f /tmp/qmd-install.log ]; then echo 'Install:'; tail -n 35 /tmp/qmd-install.log; fi
+            if [ -f /tmp/qmd-tests.log ]; then echo 'Unit tests:'; tail -n 100 /tmp/qmd-tests.log; fi
+            if [ -f /tmp/nbm-qmd-job.log ]; then echo 'Extractor:'; tail -n 100 /tmp/nbm-qmd-job.log; else echo 'No extractor log'; fi
           } > diagnostics/qmd-run.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
