@@ -1,7 +1,7 @@
 Real Chromium / Playwright deployment smoke test
-2026-10-29T22:07:40.763Z
+2026-10-29T22:10:03.355Z
 Result: PASS
-Page: http://127.0.0.1:4173/model-verification-dashboard/
+Page: https://jaczerin24.github.io/model-verification-dashboard/
 JavaScript errors: 0
 Browser and checks:
 Default guidance landing page: rendered
