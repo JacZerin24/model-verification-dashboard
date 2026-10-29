@@ -1,5 +1,5 @@
 NBM QMD point extraction status
-UTC: 2026-10-29T16:27:03Z
+UTC: 2026-10-29T20:37:46Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
@@ -22,12 +22,12 @@ Downloading eccodes-2.50.0-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 84.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 164.7 MB/s  0:00:00
 Downloading eckitlib-2.5.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (36.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 65.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 171.9 MB/s  0:00:00
 Downloading findlibs-0.1.4-py3-none-any.whl (10 kB)
 Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 145.8 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 334.6 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
@@ -49,20 +49,20 @@ test_interval_score_penalizes_misses (test_qmd.QMDTests.test_interval_score_pena
 test_no_accumulated_max_or_min_percentiles (test_qmd.QMDTests.test_no_accumulated_max_or_min_percentiles) ... ok
 test_quantile_pinball_loss (test_qmd.QMDTests.test_quantile_pinball_loss) ... ok
 test_url_construction (test_qmd.QMDTests.test_url_construction) ... ok
-test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only) ... ok
+test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only) ... ERROR
 test_wis_nonnegative (test_qmd.QMDTests.test_wis_nonnegative) ... ok
 
+======================================================================
+ERROR: test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only)
 ----------------------------------------------------------------------
-Ran 18 tests in 0.002s
+Traceback (most recent call last):
+  File "/home/runner/work/model-verification-dashboard/model-verification-dashboard/backend/test_qmd.py", line 60, in test_verify_complete_quantiles_only
+    scores, n = verify(rows,obs,now)
+    ^^^^^^^^^
+ValueError: too many values to unpack (expected 2)
 
-OK
-Extractor:
-QMD 2026-10-29T00:00:00+00:00 f012: fetching source inventory
-Saved 70 percentile station values
-QMD 2026-10-29T00:00:00+00:00 f024: fetching source inventory
-Saved 70 percentile station values
-QMD 2026-10-29T00:00:00+00:00 f036: fetching source inventory
-Saved 70 percentile station values
-QMD 2026-10-29T00:00:00+00:00 f048: fetching source inventory
-Saved 70 percentile station values
-QMD status: 2240 quantile values; 392 verifying cases; 0 warnings
+----------------------------------------------------------------------
+Ran 18 tests in 0.004s
+
+FAILED (errors=1)
+No extractor log
