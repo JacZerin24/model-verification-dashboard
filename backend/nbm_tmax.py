@@ -112,6 +112,12 @@ def build_period_observations(forecasts, metar_groups):
     return observed, windows
 
 
+def count_distinct_observed_windows(cases):
+    """A forecast cycle is not an independent observed station/window event."""
+    return len({(row["station"], row["valid"]) for row in cases})
+
+
+
 def run(no_network=False, days=7):
     now = utcnow()
     archive_cutoff = iso(now - timedelta(days=35))
@@ -160,9 +166,7 @@ def run(no_network=False, days=7):
     # Several forecast cycles can verify against the same observed 18h window.
     # Report the number of distinct observed station/window events separately
     # from the number of matched forecast vintages.
-    distinct_observed_windows = len({
-        (case["station"], case["valid"]) for case in case_details
-    })
+    distinct_observed_windows = count_distinct_observed_windows(case_details)
     for item in scores:
         item["element"] = "tmax18"
     for case in case_details:
