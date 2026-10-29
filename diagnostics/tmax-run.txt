@@ -1,5 +1,5 @@
 Tmax pilot validation
-UTC: 2026-10-29T21:22:43Z
+UTC: 2026-10-29T21:24:22Z
 test_max_fields_exact_statistical_window (test_nbm_tmax.TmaxQmdTests.test_max_fields_exact_statistical_window) ... ok
 test_period_obs_requires_all_six_hour_reports (test_nbm_tmax.TmaxQmdTests.test_period_obs_requires_all_six_hour_reports) ... ok
 test_asos_parsing (test_pipeline.PipelineTests.test_asos_parsing) ... ok
@@ -31,18 +31,27 @@ test_reject_wrong_boundary_and_missing_report (test_tmax_observations.TmaxObserv
 test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationTests.test_six_hour_remarks_and_signed_tenths) ... ok
 
 ----------------------------------------------------------------------
-Ran 29 tests in 0.003s
+Ran 29 tests in 0.006s
 
 OK
 Tmax 2026-10-29T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-29T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-29T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-28T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-28T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-28T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-27T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-27T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
 Tmax 2026-10-27T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
 METAR 6-hour maxima KBTR: 35
 METAR 6-hour maxima KMSY: 35
 METAR 6-hour maxima KHDC: 35
@@ -50,4 +59,4 @@ METAR 6-hour maxima KNEW: 35
 METAR 6-hour maxima KASD: 35
 METAR 6-hour maxima KMCB: 35
 METAR 6-hour maxima KGPT: 35
-18h Tmax: 0 percentile values, 0 complete verifying cases; 9 warnings
+18h Tmax: 315 percentile values, 21 complete verifying cases; 0 warnings
