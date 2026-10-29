@@ -443,11 +443,12 @@ def run(offline=False, backfill_days=0):
         "models": [{"id": code, **meta} for code, meta in MODELS.items()],
         "elements": [{"id": code, **meta} for code, meta in ELEMENTS.items()],
         "leadBins": list(LEADS),
-        "scores": scores, "fairScores": fair_scores, "dailyScores": daily_scores,
+        # Publish aggregate verification only. The 30-day forecast archive stays
+        # in data/archive; unnecessary raw trajectories would make Pages JSON huge.
+        "scores": [], "fairScores": fair_scores, "dailyScores": daily_scores,
         "rankingMethod": "available-products-common-station-valid-time-lead-bin",
         "comparisonProducts": COMPARISON_PRODUCTS,
-        "latestForecasts": latest,
-        "recentObservations": recent_obs, "recentPairs": recent_pairs,
+        "latestForecasts": [], "recentObservations": [], "recentPairs": [],
         "quality": {
             "forecastRecords": len(forecasts), "observationRecords": len(observations),
             "matchedElementPairs30d": matched, "fairCaseKeys30d": common_count,
