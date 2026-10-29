@@ -39,7 +39,7 @@ def main():
         from pipeline import get_text
         url="https://mesonet.agron.iastate.edu/api/1/mos.json?station=KBTR&model=NBP"
         response=json.loads(get_text(url))
-        lines.append("\\nIEM NBP station percentile API availability:")
+        lines.append("\nIEM NBP station percentile API availability:")
         lines.append("Root keys: "+str(list(response)[:20]))
         schema=response.get("schema",[])
         lines.append("Columns: "+str([x.get("name",str(x)) if isinstance(x,dict) else str(x) for x in schema][:120]))
@@ -48,7 +48,7 @@ def main():
         lines.append("First data sample: "+str(rows[:1])[:1300])
     except Exception as exc:
         lines.append(f"IEM NBP source probe ERROR {type(exc).__name__}: {str(exc)[:250]}")
-\n    out=Path(__file__).resolve().parents[1]/"diagnostics"/"tmax-inventory.txt"
+    out=Path(__file__).resolve().parents[1]/"diagnostics"/"tmax-inventory.txt"
     out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text("\n".join(lines)+"\n",encoding="utf-8")
     print("\n".join(lines[:70]),flush=True)
