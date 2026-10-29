@@ -38,13 +38,22 @@ type Dashboard = {
     historyEarliestForecastRun?: string|null; historyLatestForecastRun?: string|null
   }
 }
+type QmdPercentileRank = { percentile:number; mae:number; bias:number; closestPct:number }
 type QmdScore = {
  station:string; element:string; lead:number; days:number; n:number;
  p50MAE:number; p50Bias:number; wis:number;
  interval80Width:number; coverage80:number; coverage50:number;
  p10Below:number; p25Below:number; p50Below:number; p75Below:number; p90Below:number;
+ closestRanking?:QmdPercentileRank[];
+ closestByMAE?:number; closestMostOften?:number;
+}
+type QmdCase = {
+ station:string; element:string; valid:string; observedAt:string; init:string;
+ lead:number; observed:number; forecast:Record<string,number>;
+ absoluteErrors:Record<string,number>; closest:number[];
 }
 type QmdData = { generatedAt:string|null; dataStatus:string; scores:QmdScore[];
+ recentCases?:QmdCase[]; verificationType?:string;
  quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[]} }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
 type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
@@ -171,6 +180,11 @@ function App() {
   },[refresh])
   const qmdScore=(qmd?.scores||[]).find(x=>
     x.station===qmdStation&&x.element===qmdElement&&x.lead===Number(qmdLead)&&x.days===Number(qmdDays))
+  const qmdExamples=(qmd?.recentCases||[])
+    .filter(x=>(qmdStation==='ALL'||x.station===qmdStation)&&
+      x.element===qmdElement&&x.lead===Number(qmdLead)&&
+      new Date(x.valid).getTime()>=Date.now()-Number(qmdDays)*86400000)
+    .sort((a,b)=>b.valid.localeCompare(a.valid)).slice(0,8)
   const allScores=data.fairScores||[]
   const allDaily=data.dailyScores||[]
   const selectedElement=data.elements.find(x=>x.id===element)
@@ -369,8 +383,8 @@ function App() {
           </>}
         </>:tab==='percentiles'?<div className="secondary-page">
           <div className="eyebrow"><span className="mini-bar"/> NBM · QMD QUANTILE VERIFICATION</div>
-          <h1>Are NBM percentiles<br/><span>verifying accurately?</span></h1>
-          <p className="page-subtitle">Real P10, P25, P50, P75 and P90 gridded NBM QMD forecasts, measured against airport observations. This is about calibration and uncertainty—not simply which forecast looks most reasonable.</p>
+          <h1>Which NBM percentile<br/><span>has been closest lately?</span></h1>
+          <p className="page-subtitle">See which P10, P25, P50, P75 or P90 temperature forecast has come nearest to the observed value—then check whether the entire probabilistic distribution is calibrated.</p>
           <section className="filters" aria-label="Percentile verification settings">
             <div className="filters-head"><div><SlidersHorizontal size={17}/><strong>Your percentile comparison</strong></div><span>Verified NOAA QMD guidance only</span></div>
             <div className="filter-grid">
@@ -383,10 +397,43 @@ function App() {
               <SelectField id="qmd-lead" label="Forecast lead" value={qmdLead} onChange={setQmdLead} icon={Activity}
                 options={[12,24,36,48].map(x=>({value:String(x),label:x+' hours'}))}/>
             </div>
-            <p className="filter-hint"><Info size={14}/> Initial QMD coverage: 00Z forecast cycles, four lead times, and nearest-gridpoint temperature/dew point. Not the same as the NBM text guidance on the main leaderboard.</p>
+            <p className="filter-hint"><Info size={14}/> QMD data covers instantaneous 2-m temperature/dew point, not daily maximum or minimum temperatures. The 00Z forecast cycles are evaluated at matching valid times.</p>
           </section>
           {qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
           {qmdScore?<div>
+            <section className="surface qmd-accuracy-card">
+              <div className="qmd-accuracy-head">
+                <div>
+                  <span className="eyebrow">01 · CLOSEST TO OBSERVED VALUE</span>
+                  <h2>{qmdScore.closestByMAE===undefined?'Point-forecast ranking not generated yet':'P'+qmdScore.closestByMAE+' has been closest on average'}</h2>
+                  <p>Ranked by the average absolute difference between each percentile forecast and the actual observed {qmdElement==='tmp'?'temperature':'dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} cases.</p>
+                </div>
+                <span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Early sample · interpret cautiously'}</span>
+              </div>
+              {qmdScore.closestRanking?.length?<div className="qmd-accuracy-table">
+                <div className="qmd-accuracy-columns"><span>PERCENTILE</span><span>AVERAGE MISS</span><span>CLOSEST MOST OFTEN</span><span>BIAS</span></div>
+                {qmdScore.closestRanking.map((r,i)=><div className={'qmd-accuracy-row '+(i===0?'qmd-winner':'')} key={r.percentile}>
+                  <div><span className="qmd-rank-number">{i+1}</span><strong>P{r.percentile}</strong>{i===0&&<span className="qmd-best">Lowest MAE</span>}</div>
+                  <strong>{metric(r.mae)} °F</strong>
+                  <span>{metric(r.closestPct,1)}% of cases</span>
+                  <span>{signed(r.bias)} °F</span>
+                </div>)}
+              </div>:<Placeholder title="Point-forecast ranking is being generated" body="The QMD verification pipeline will add the error for each percentile, not only P50."/ >}
+              <p className="qmd-explain"><Info size={15}/> “Closest most often” splits credit for ties. This is a descriptive point-forecast comparison, <strong>not</strong> a substitute for probabilistic calibration or evidence that one percentile is always best.</p>
+            </section>
+            <section className="surface qmd-examples">
+              <SectionHeading kicker="02 · REAL VERIFYING EXAMPLES" title="What value actually verified?" description="For each valid time, compare the observed reading with all five percentile forecasts. The nearest percentile is highlighted."/>
+              {qmdExamples.length?<div className="qmd-examples-scroll"><table>
+                <thead><tr><th>STATION · VALID TIME</th><th>OBSERVED</th>{[10,25,50,75,90].map(p=><th key={p}>P{p}</th>)}<th>CLOSEST</th></tr></thead>
+                <tbody>{qmdExamples.map((x,i)=><tr key={x.station+x.valid+x.lead+x.element+i}>
+                  <td><strong>{x.station}</strong><small>{formatUpdated(x.valid)}</small></td>
+                  <td><strong>{metric(x.observed,1)}°F</strong></td>
+                  {[10,25,50,75,90].map(p=><td key={p} className={x.closest.includes(p)?'qmd-cell-nearest':''}>{metric(x.forecast[String(p)],1)}°</td>)}
+                  <td className="qmd-nearest-label">{x.closest.map(p=>'P'+p).join(' / ')}</td>
+                </tr>)}</tbody>
+              </table></div>:<Placeholder title="Observed examples will appear here" body="No complete percentile forecasts and matching temperature observations are available for this selection yet."/>}
+              <p className="qmd-explain"><Info size={15}/> These compare <strong>instantaneous 2-m temperature or dew point at the forecast valid time</strong> with a nearby METAR. They do <strong>not</strong> represent daily observed high temperatures; verifying highs requires separate NBM maximum-temperature percentile guidance and a matched daily high observation.</p>
+            </section>
             <div className="result-hero">
               <div className="result-topline"><span className="eyebrow">MEASURED PROBABILISTIC VERIFICATION</span><span className={'tag '+(qmdScore.n>=30?'ready':'caution')}>{qmdScore.n>=30?'30+ cases':'Preliminary sample'}</span></div>
               <div className="qmd-metrics">
@@ -399,7 +446,7 @@ function App() {
             </div>
             <div className="split-panels">
               <section className="surface">
-                <SectionHeading kicker="01 · RELIABILITY" title="Is each percentile calibrated?" description="A calibrated P10 should exceed the observed value around 10% of the time, P50 about 50%, and P90 about 90%."/>
+                <SectionHeading kicker="03 · RELIABILITY" title="Is each percentile calibrated?" description="A calibrated P10 should exceed the observed value around 10% of the time, P50 about 50%, and P90 about 90%."/>
                 <div className="qmd-table">
                   {([10,25,50,75,90] as const).map(p=>{
                     const measured=qmdScore[('p'+p+'Below') as keyof QmdScore] as number
@@ -408,7 +455,7 @@ function App() {
                 </div>
               </section>
               <section className="surface">
-                <SectionHeading kicker="02 · DISTRIBUTION SKILL" title="How useful is the spread?" description="The same observations are checked against multiple forecast quantiles, evaluating both interval width and misses."/>
+                <SectionHeading kicker="04 · DISTRIBUTION SKILL" title="How useful is the spread?" description="The same observations are checked against multiple forecast quantiles, evaluating both interval width and misses."/>
                 <div className="qmd-secondary-metrics">
                   <div><span>Weighted interval score</span><strong>{metric(qmdScore.wis)} °F</strong><small>Lower is better on comparable samples</small></div>
                   <div><span>Average P10–P90 width</span><strong>{metric(qmdScore.interval80Width)} °F</strong><small>Typical uncertainty range</small></div>
