@@ -1,0 +1,15 @@
+QMD temperature maximum source probe; UTC: 2026-10-29T21:11:50Z
+A MAX percentile is NOT automatically the NWS official daily high.
+Source cycle: 2026-10-29T00:00:00Z
+
+f012  matching MAX percentiles: 0
+
+f024  matching MAX percentiles: 0
+
+f036  matching MAX percentiles: 0
+
+f048  matching MAX percentiles: 0
+
+f060  matching MAX percentiles: 0
+
+f072  matching MAX percentiles: 0
