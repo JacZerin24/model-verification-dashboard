@@ -1,5 +1,5 @@
 NBM QMD point extraction status
-UTC: 2026-10-29T20:38:11Z
+UTC: 2026-10-29T20:39:51Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
@@ -22,12 +22,12 @@ Downloading eccodes-2.50.0-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 32.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 96.9 MB/s  0:00:00
 Downloading eckitlib-2.5.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (36.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 30.8 MB/s  0:00:01
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 198.0 MB/s  0:00:00
 Downloading findlibs-0.1.4-py3-none-any.whl (10 kB)
 Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 151.0 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 237.6 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
@@ -44,7 +44,7 @@ test_short_range_compares_three_available_products (test_pipeline.PipelineTests.
 test_time_tolerance (test_pipeline.PipelineTests.test_time_tolerance) ... ok
 test_verification_and_bias_sign (test_pipeline.PipelineTests.test_verification_and_bias_sign) ... ok
 test_wind_gust_compares_nbm_products_only (test_pipeline.PipelineTests.test_wind_gust_compares_nbm_products_only) ... ok
-test_closest_percentile_for_observed_80 (test_qmd.QMDTests.test_closest_percentile_for_observed_80) ... FAIL
+test_closest_percentile_for_observed_80 (test_qmd.QMDTests.test_closest_percentile_for_observed_80) ... ok
 test_closest_percentile_ties_share_credit (test_qmd.QMDTests.test_closest_percentile_ties_share_credit) ... ok
 test_index_offsets_and_excludes_last_unknown_length (test_qmd.QMDTests.test_index_offsets_and_excludes_last_unknown_length) ... ok
 test_interval_score_penalizes_misses (test_qmd.QMDTests.test_interval_score_penalizes_misses) ... ok
@@ -54,27 +54,9 @@ test_url_construction (test_qmd.QMDTests.test_url_construction) ... ok
 test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only) ... ok
 test_wis_nonnegative (test_qmd.QMDTests.test_wis_nonnegative) ... ok
 
-======================================================================
-FAIL: test_closest_percentile_for_observed_80 (test_qmd.QMDTests.test_closest_percentile_for_observed_80)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/home/runner/work/model-verification-dashboard/model-verification-dashboard/backend/test_qmd.py", line 92, in test_closest_percentile_for_observed_80
-    self.assertEqual([x["percentile"] for x in ranked],[75,50,90,25,10])
-AssertionError: Lists differ: [75, 50, 25, 90, 10] != [75, 50, 90, 25, 10]
-
-First differing element 2:
-25
-90
-
-- [75, 50, 25, 90, 10]
-?              ----
-
-+ [75, 50, 90, 25, 10]
-?          ++++
-
-
 ----------------------------------------------------------------------
 Ran 20 tests in 0.004s
 
-FAILED (failures=1)
-No extractor log
+OK
+Extractor:
+QMD status: 2240 quantile values; 392 verifying cases; 0 warnings
