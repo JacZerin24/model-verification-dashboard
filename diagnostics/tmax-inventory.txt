@@ -1,15 +1,27 @@
-QMD temperature maximum source probe; UTC: 2026-10-29T21:11:50Z
+QMD temperature maximum source probe; UTC: 2026-10-29T21:12:48Z
 A MAX percentile is NOT automatically the NWS official daily high.
 Source cycle: 2026-10-29T00:00:00Z
+f012 total idx lines: 295, TMP lines: 31, 18h: 0
+Example TMP: 203:348309495:d=2026102900:TMP:2 m above ground:12 hour fcst:prob <255.372:prob fcst 255/255 | 204:348780500:d=2026102900:TMP:2 m above ground:12 hour fcst:prob <270.928:prob fcst 255/255 | 205:349678973:d=2026102900:TMP:2 m above ground:12 hour fcst:prob <273.15:prob fcst 255/255 | 206:350712704:d=2026102900:TMP:2 m above ground:12 hour fcst:prob >299.817:prob fcst 255/255
 
 f012  matching MAX percentiles: 0
+f024 total idx lines: 327, TMP lines: 31, 18h: 0
+Example TMP: 235:433670489:d=2026102900:TMP:2 m above ground:24 hour fcst:prob <255.372:prob fcst 255/255 | 236:434139012:d=2026102900:TMP:2 m above ground:24 hour fcst:prob <270.928:prob fcst 255/255 | 237:434838959:d=2026102900:TMP:2 m above ground:24 hour fcst:prob <273.15:prob fcst 255/255 | 238:435639253:d=2026102900:TMP:2 m above ground:24 hour fcst:prob >299.817:prob fcst 255/255
 
 f024  matching MAX percentiles: 0
+f036 total idx lines: 327, TMP lines: 31, 18h: 0
+Example TMP: 235:424504290:d=2026102900:TMP:2 m above ground:36 hour fcst:prob <255.372:prob fcst 255/255 | 236:424977726:d=2026102900:TMP:2 m above ground:36 hour fcst:prob <270.928:prob fcst 255/255 | 237:425875432:d=2026102900:TMP:2 m above ground:36 hour fcst:prob <273.15:prob fcst 255/255 | 238:426909236:d=2026102900:TMP:2 m above ground:36 hour fcst:prob >299.817:prob fcst 255/255
 
 f036  matching MAX percentiles: 0
+f048 total idx lines: 359, TMP lines: 31, 18h: 0
+Example TMP: 267:515943544:d=2026102900:TMP:2 m above ground:48 hour fcst:prob <255.372:prob fcst 255/255 | 268:516411899:d=2026102900:TMP:2 m above ground:48 hour fcst:prob <270.928:prob fcst 255/255 | 269:517138206:d=2026102900:TMP:2 m above ground:48 hour fcst:prob <273.15:prob fcst 255/255 | 270:518029263:d=2026102900:TMP:2 m above ground:48 hour fcst:prob >299.817:prob fcst 255/255
 
 f048  matching MAX percentiles: 0
+f060 total idx lines: 359, TMP lines: 31, 18h: 0
+Example TMP: 267:499937795:d=2026102900:TMP:2 m above ground:60 hour fcst:prob <255.372:prob fcst 255/255 | 268:500406373:d=2026102900:TMP:2 m above ground:60 hour fcst:prob <270.928:prob fcst 255/255 | 269:501497214:d=2026102900:TMP:2 m above ground:60 hour fcst:prob <273.15:prob fcst 255/255 | 270:502657451:d=2026102900:TMP:2 m above ground:60 hour fcst:prob >299.817:prob fcst 255/255
 
 f060  matching MAX percentiles: 0
+f072 total idx lines: 391, TMP lines: 31, 18h: 0
+Example TMP: 299:589711144:d=2026102900:TMP:2 m above ground:72 hour fcst:prob <255.372:prob fcst 255/255 | 300:590179499:d=2026102900:TMP:2 m above ground:72 hour fcst:prob <270.928:prob fcst 255/255 | 301:590861941:d=2026102900:TMP:2 m above ground:72 hour fcst:prob <273.15:prob fcst 255/255 | 302:591687393:d=2026102900:TMP:2 m above ground:72 hour fcst:prob >299.817:prob fcst 255/255
 
 f072  matching MAX percentiles: 0
