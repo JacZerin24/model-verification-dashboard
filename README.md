@@ -84,17 +84,17 @@ The percentile page now also ranks **P10, P25, P50, P75 and P90 by mean absolute
 
 Ranking percentiles as point forecasts is **descriptive**, not a proper assessment of quantile skill. Probabilistic calibration (observed fraction below each percentile, P10–P90/P25–P75 interval coverage, quantile loss and WIS) remains a separate component below the accuracy leaderboard.
 
-**Daily high temperatures (Tmax) are not yet included.** An observed high of 80°F must be verified against the matching 12/24-hour NBM maximum-temperature percentile field and a station maximum from that same interval. Instantaneous 2-m temperature at +12h is not a substitute for Tmax. See issue #3 for the next dataset.
+**Daily high temperatures (Tmax) are not yet included.** An observed high of 80°F must be verified against the matching 18-hour NBM daytime-maximum-temperature percentile field and a station maximum from that same interval. Instantaneous 2-m temperature at +12h is not a substitute for Tmax. See issue #3 for the next dataset.
 
 ## NBM QMD percentile verification (first implementation)
 
-The independent **Archive and verify NBM QMD percentiles** workflow collects the actual 00Z QMD GRIB2 CONUS fields from the public NOAA AWS archive. It uses the .idx inventory and HTTP range downloads rather than whole CONUS files. The initial scope is P10/P25/P50/P75/P90 for 2-m temperature and dew point, at +12, +24, +36 and +48 hours, sampled at seven LIX-area airports by nearest grid point.
+The independent **Archive and verify NBM QMD percentiles** workflow collects the actual 00/06/12/18 UTC QMD GRIB2 CONUS fields from the public NOAA AWS archive. It uses the .idx inventory and HTTP range downloads rather than whole CONUS files. The initial scope is P10/P25/P50/P75/P90 for 2-m temperature and dew point, at +12, +24, +36 and +48 hours, sampled at seven LIX-area airports by nearest grid point.
 
-Files: backend/nbm_qmd.py, backend/test_qmd.py, .github/workflows/nbm-qmd.yml. The 00Z GRIB may not be available until several hours after initialization. The workflow defaults to validating one previous cycle and supports an explicit 1–30 cycle backfill in the GitHub Actions manual dispatch.
+Files: backend/nbm_qmd.py, backend/test_qmd.py, .github/workflows/nbm-qmd.yml. QMD fields may appear several hours after initialization; the collector applies a conservative nine-hour availability delay. It samples all four synoptic cycles over a configurable 1–30 recent UTC dates and refreshes four times daily.
 
 After complete five-quantile sets are matched to observed METAR temperature/dew point values within 40 minutes, public/data/qmd.json publishes empirical P10–P90 and P25–P75 coverage (nominal 80/50%), rank/PIT-style empirical CDF checks at P10/P25/P50/P75/P90, P50 MAE/bias, quantile loss and weighted interval score. The percentile page does **not** manufacture results when the archived QMD fields have not decoded successfully or no observations have verified.
 
-Scientific notes: the QMD P50 point forecast is not necessarily identical to NBM deterministic guidance; 00Z QMD is not comparable with hourly MOS without matching issuance/availability and verifying windows. Only compare proper scores over identical cases. A low number of cases is preliminary.
+Scientific notes: the QMD P50 point forecast is not necessarily identical to NBM deterministic guidance; QMD is not comparable with hourly MOS without matching issuance/availability and verifying windows. Only compare proper scores over identical cases. A low number of cases is preliminary.
 
 ## Next scientific milestones
 
@@ -106,3 +106,7 @@ Scientific notes: the QMD P50 point forecast is not necessarily identical to NBM
 Source data: https://mesonet.agron.iastate.edu/mos/ and https://mesonet.agron.iastate.edu/request/download.phtml
 
 Independent research, not an official NWS product. Data and GitHub Actions may be late or incomplete.
+
+## Next validation: true daily-maximum temperature
+
+NBM QMD daytime maximum temperature is a separate 18-hour forecast variable; instantaneous 2-m QMD temperature cannot be used as a proxy. Source inventory inspection is recorded in `diagnostics/tmax-inventory.txt`, while `backend/tmax_observations.py` and its unit tests define a conservative method to verify three consecutive six-hour ASOS maximum-temperature remarks against one 18-hour forecast window. These synoptic extremes do not necessarily match the official NWS local-standard-day CLI high. Until NBM maximum-temperature percentiles can be extracted and their forecast windows validated, the dashboard intentionally does not present a Tmax skill ranking.
