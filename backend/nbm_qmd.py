@@ -100,8 +100,11 @@ def decode_points(message, element, percentile, cycle, lead, stations):
     gid = eccodes.codes_new_from_message(message)
     try:
         short_name = str(eccodes.codes_get(gid, "shortName")).upper()
-        if short_name != VARIABLES[element]:
-            raise ValueError(f"Expected {VARIABLES[element]}, got {short_name}")
+        # ecCodes normalizes GRIB2 2-m dewpoint as '2d'/'2D', whereas
+        # the NBM wgrib2 inventory labels the same physical field 'DPT'.
+        permitted = {"TMP"} if element == "tmp" else {"DPT", "2D"}
+        if short_name not in permitted:
+            raise ValueError(f"Expected {sorted(permitted)}, got {short_name}")
         # Validate GRIB product template percentile metadata rather than relying on
         # inventory text alone. Some encodings provide scaled value in 'percentileValue'.
         try:
