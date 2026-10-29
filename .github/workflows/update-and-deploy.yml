@@ -118,3 +118,23 @@ jobs:
           git add diagnostics/last-failure.txt
           git commit -m "ci: capture failed deployment diagnostics" || true
           git push origin HEAD:main || true
+
+      - name: Record successful Pages deployment
+        if: success()
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          mkdir -p diagnostics
+          {
+            echo "GitHub Pages deployment verified successful"
+            echo "UTC: $(date -u +%FT%TZ)"
+            echo "Site: $PAGE_URL"
+            echo "Build result: ${{ steps.build.outcome }}"
+            echo "Deploy result: ${{ steps.deployment.outcome }}"
+          } > diagnostics/last-success.txt
+          rm -f diagnostics/last-failure.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A diagnostics/
+          git commit -m "ci: record successful Pages deployment" || true
+          git push origin HEAD:main || true
