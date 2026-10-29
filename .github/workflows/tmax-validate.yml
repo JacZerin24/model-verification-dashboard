@@ -4,6 +4,11 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/tmax-validate.yml'
+      - 'backend/nbm_tmax.py'
+      - 'backend/nbm_qmd.py'
+      - 'backend/tmax_observations.py'
+      - 'backend/test_nbm_tmax.py'
+      - 'backend/test_tmax_observations.py'
   workflow_dispatch:
 permissions:
   contents: write
