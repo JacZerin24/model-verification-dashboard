@@ -48,6 +48,27 @@ ELEMENTS = {
 LEADS = {"all": (0, 999), "0-12": (0, 12), "12-24": (12, 24),
          "24-48": (24, 48), "48-72": (48, 72), "72-120": (72, 120),
          "120+": (120, 999)}
+# Only compare products that actually carry each variable at each lead.
+# NBE begins at +24h in this text product; GFS/NAM MOS do not
+# expose wind gust in the present station API response.
+PRODUCTS_BY_LEAD = {
+    "0-12": ("NBS", "GFS", "NAM"),
+    "12-24": ("NBS", "GFS", "NAM"),
+    "24-48": ("NBS", "NBE", "GFS", "NAM"),
+    "48-72": ("NBS", "NBE", "GFS", "NAM"),
+    "72-120": ("NBS", "NBE", "GFS", "NAM"),
+}
+COMPARISON_PRODUCTS = {
+    element: {
+        lead: [model for model in model_ids
+               if element != "gst" or model in ("NBS", "NBE")]
+        for lead, model_ids in PRODUCTS_BY_LEAD.items()
+        if len([model for model in model_ids
+                if element != "gst" or model in ("NBS", "NBE")]) >= 2
+    }
+    for element in ELEMENTS
+}
+
 HEADERS = {"User-Agent": "model-verification-dashboard/0.1 (+public research; contact via GitHub)"}
 
 
@@ -305,14 +326,15 @@ def calculate_fair(forecasts, observations, now):
     now7 = now - timedelta(days=7)
     common_count = 0
     for (station, element, valid, lead), forecasts_by_model in grouped.items():
-        if len(forecasts_by_model) != len(model_ids):
+        expected = COMPARISON_PRODUCTS.get(element, {}).get(lead, [])
+        if len(expected) < 2 or not all(model in forecasts_by_model for model in expected):
             continue
         observation = closest_observation(observed[station], valid, element)
         if observation is None:
             continue
         common_count += 1
-        errors = {model: value - observation[element]
-                  for model, value in forecasts_by_model.items()}
+        errors = {model: forecasts_by_model[model] - observation[element]
+                  for model in expected}
         best_abs = min(abs(value) for value in errors.values())
         winners = [model for model, err in errors.items()
                    if math.isclose(abs(err), best_abs, abs_tol=1e-8)]
@@ -392,7 +414,8 @@ def run(offline=False):
         "elements": [{"id": code, **meta} for code, meta in ELEMENTS.items()],
         "leadBins": list(LEADS),
         "scores": scores, "fairScores": fair_scores, "dailyScores": daily_scores,
-        "rankingMethod": "all-four-products-common-cases",
+        "rankingMethod": "available-products-common-station-valid-time-lead-bin",
+        "comparisonProducts": COMPARISON_PRODUCTS,
         "latestForecasts": latest,
         "recentObservations": recent_obs, "recentPairs": recent_pairs,
         "quality": {
