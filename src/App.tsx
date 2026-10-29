@@ -35,6 +35,7 @@ type Dashboard = {
     forecastRecords?: number; observationRecords?: number
     matchedElementPairs30d?: number; fairCaseKeys30d?: number
     warnings?: string[]; NBMPercentilesAvailable?: boolean
+    historyEarliestForecastRun?: string|null; historyLatestForecastRun?: string|null
   }
 }
 type QmdScore = {
@@ -284,6 +285,7 @@ function App() {
                 options={availableLeads.map(x=>({value:x.value,label:x.label}))}/>
             </div>
             <p className="filter-hint"><Info size={14}/> Lead time is how far ahead the forecast was made. A 24–48 hour forecast was made roughly 1–2 days before the weather occurred.</p>
+            {data.quality?.historyEarliestForecastRun&&<p className="filter-hint"><Clock3 size={14}/> Archived forecast runs available since {new Date(data.quality.historyEarliestForecastRun).toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric',timeZone:'UTC'})}. The 7/30-day filters use the cases that actually exist within that window.</p>}
           </section>
           {tab==='rankings'?<>
             <section className="result-hero" aria-live="polite">
