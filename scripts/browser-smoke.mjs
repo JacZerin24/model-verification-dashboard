@@ -2,7 +2,7 @@ import { spawn } from 'node:child_process'
 import { writeFile, mkdir } from 'node:fs/promises'
 import { chromium } from 'playwright'
 
-const base = 'http://127.0.0.1:4173/model-verification-dashboard/'
+const base = process.env.SMOKE_URL || 'http://127.0.0.1:4173/model-verification-dashboard/'
 const errors = []
 const logs = []
 let server
@@ -33,13 +33,13 @@ async function record() {
 }
 
 async function main() {
-  server = spawn('node', ['node_modules/vite/bin/vite.js', 'preview',
+  if (!process.env.SMOKE_URL) server = spawn('node', ['node_modules/vite/bin/vite.js', 'preview',
     '--host', '127.0.0.1', '--port', '4173', '--strictPort'], {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, GITHUB_PAGES: 'true' },
   })
-  server.on('error', e => logs.push('Preview server failed: ' + e))
-  server.stderr.on('data', b => logs.push('Preview: ' + String(b).slice(0, 1200)))
+  if (server) server.on('error', e => logs.push('Preview server failed: ' + e))
+  if (server) server.stderr.on('data', b => logs.push('Preview: ' + String(b).slice(0, 1200)))
   browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
   page = await browser.newPage({ viewport: { width: 1280, height: 860 } })
   page.on('pageerror', error => errors.push(error.stack || String(error)))
