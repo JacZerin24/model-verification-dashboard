@@ -1,5 +1,5 @@
 NBM QMD point extraction status
-UTC: 2026-10-29T20:54:40Z
+UTC: 2026-10-29T21:30:46Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
@@ -22,17 +22,19 @@ Downloading eccodes-2.50.0-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 88.7 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 22.1 MB/s  0:00:00
 Downloading eckitlib-2.5.0.33-cp312-cp312-manylinux_2_28_x86_64.whl (36.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 110.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.0/36.0 MB 67.4 MB/s  0:00:00
 Downloading findlibs-0.1.4-py3-none-any.whl (10 kB)
 Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 116.4 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 141.8 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
 Successfully installed attrs-26.1.0 cffi-2.1.1 eccodes-2.50.0 eccodeslib-2.50.0.33 eckitlib-2.5.0.33 findlibs-0.1.4 numpy-2.5.4 pycparser-3.12
 Unit tests:
+test_max_fields_exact_statistical_window (test_nbm_tmax.TmaxQmdTests.test_max_fields_exact_statistical_window) ... ok
+test_period_obs_requires_all_six_hour_reports (test_nbm_tmax.TmaxQmdTests.test_period_obs_requires_all_six_hour_reports) ... ok
 test_asos_parsing (test_pipeline.PipelineTests.test_asos_parsing) ... ok
 test_common_case_requires_all_models (test_pipeline.PipelineTests.test_common_case_requires_all_models) ... ok
 test_common_case_scores_identical_samples_and_wins (test_pipeline.PipelineTests.test_common_case_scores_identical_samples_and_wins) ... ok
@@ -44,19 +46,99 @@ test_short_range_compares_three_available_products (test_pipeline.PipelineTests.
 test_time_tolerance (test_pipeline.PipelineTests.test_time_tolerance) ... ok
 test_verification_and_bias_sign (test_pipeline.PipelineTests.test_verification_and_bias_sign) ... ok
 test_wind_gust_compares_nbm_products_only (test_pipeline.PipelineTests.test_wind_gust_compares_nbm_products_only) ... ok
+test_available_four_cycles_and_latency (test_qmd.QMDTests.test_available_four_cycles_and_latency) ... ok
 test_closest_percentile_for_observed_80 (test_qmd.QMDTests.test_closest_percentile_for_observed_80) ... ok
 test_closest_percentile_ties_share_credit (test_qmd.QMDTests.test_closest_percentile_ties_share_credit) ... ok
 test_index_offsets_and_excludes_last_unknown_length (test_qmd.QMDTests.test_index_offsets_and_excludes_last_unknown_length) ... ok
 test_interval_score_penalizes_misses (test_qmd.QMDTests.test_interval_score_penalizes_misses) ... ok
 test_no_accumulated_max_or_min_percentiles (test_qmd.QMDTests.test_no_accumulated_max_or_min_percentiles) ... ok
+test_overlay_keeps_missing_guidance_missing (test_qmd.QMDTests.test_overlay_keeps_missing_guidance_missing) ... ok
+test_overlay_only_exact_model_cycle_and_valid_time (test_qmd.QMDTests.test_overlay_only_exact_model_cycle_and_valid_time) ... ok
 test_quantile_pinball_loss (test_qmd.QMDTests.test_quantile_pinball_loss) ... ok
 test_url_construction (test_qmd.QMDTests.test_url_construction) ... ok
 test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only) ... ok
 test_wis_nonnegative (test_qmd.QMDTests.test_wis_nonnegative) ... ok
+test_exact_three_six_hour_groups_for_eighteen_hour_max (test_tmax_observations.TmaxObservationTests.test_exact_three_six_hour_groups_for_eighteen_hour_max) ... ok
+test_parse_csv (test_tmax_observations.TmaxObservationTests.test_parse_csv) ... ok
+test_reject_wrong_boundary_and_missing_report (test_tmax_observations.TmaxObservationTests.test_reject_wrong_boundary_and_missing_report) ... ok
+test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationTests.test_six_hour_remarks_and_signed_tenths) ... ok
 
 ----------------------------------------------------------------------
-Ran 20 tests in 0.002s
+Ran 29 tests in 0.007s
 
 OK
 Extractor:
-QMD status: 2240 quantile values; 392 verifying cases; 0 warnings
+QMD 2026-10-29T06:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T06:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-29T12:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T06:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T06:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T06:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T06:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T12:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T12:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T12:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T12:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T18:00:00+00:00 f012: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T18:00:00+00:00 f024: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T18:00:00+00:00 f036: fetching source inventory
+Saved 70 percentile station values
+QMD 2026-10-28T18:00:00+00:00 f048: fetching source inventory
+Saved 70 percentile station values
+QMD status: 3640 quantile values; 504 verifying cases; 0 warnings
+18-hour Tmax:
+Tmax 2026-10-26T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-26T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-26T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-25T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-25T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-25T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-24T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-24T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-24T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-23T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-23T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-10-23T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
+METAR 6-hour maxima KBTR: 51
+METAR 6-hour maxima KMSY: 51
+METAR 6-hour maxima KHDC: 51
+METAR 6-hour maxima KNEW: 51
+METAR 6-hour maxima KASD: 51
+METAR 6-hour maxima KMCB: 51
+METAR 6-hour maxima KGPT: 51
+18h Tmax: 735 percentile values, 105 complete verifying cases; 0 warnings
