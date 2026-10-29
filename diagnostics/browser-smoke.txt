@@ -1,0 +1,14 @@
+Real Chromium / Playwright deployment smoke test
+2026-10-29T22:03:53.278Z
+Result: FAIL
+Page: http://127.0.0.1:4173/model-verification-dashboard/
+JavaScript errors: 3
+ERROR console: Failed to load resource: the server responded with a status of 404 (Not Found)
+ERROR request failed: http://127.0.0.1:4173/model-verification-dashboard/assets/index-B_lHZJul.js net::ERR_ABORTED
+ERROR TEST FAILURE: locator.waitFor: Timeout 16000ms exceeded.
+Call log:
+  - waiting for locator('.app-root .page h1').first() to be visible
+
+    at main (/home/runner/work/model-verification-dashboard/model-verification-dashboard/scripts/browser-smoke.mjs:64:52)
+    at async file:///home/runner/work/model-verification-dashboard/model-verification-dashboard/scripts/browser-smoke.mjs:97:7
+Browser and checks:
