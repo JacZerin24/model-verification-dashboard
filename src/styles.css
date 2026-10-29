@@ -52,7 +52,7 @@ a{color:inherit;text-decoration:none}h1,h2,h3,p{margin:0}
 .inline-link:hover{text-decoration:underline}.surface{background:#fff;border:1px solid #e0e9ec;border-radius:13px;box-shadow:0 3px 16px #1e43500a;min-width:0}
 .section-head{padding:22px 24px 18px}.kicker{color:#249085}.section-head h2{font-size:20px;letter-spacing:-.55px;color:#17374b;margin:9px 0 5px}
 .section-head p{font-size:11px;color:#778b98;line-height:1.6}.scorecard{margin-bottom:18px}
-.rank-head{display:grid;grid-template-columns:1.45fr 1.4fr .75fr .9fr;gap:15px;background:#f5f8f9;border-block:1px solid #e6edef;padding:11px 24px;color:#8a9da8;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.65px}
+.models-compared{padding:0 24px 15px;color:#3a7580;font-size:11px;font-weight:700;line-height:1.6}.models-compared span{color:#8aa0a9;font-weight:500}.rank-head{display:grid;grid-template-columns:1.45fr 1.4fr .75fr .9fr;gap:15px;background:#f5f8f9;border-block:1px solid #e6edef;padding:11px 24px;color:#8a9da8;font:600 9px 'IBM Plex Mono',monospace;letter-spacing:.65px}
 .ranking-row{display:grid;grid-template-columns:1.45fr 1.4fr .75fr .9fr;gap:15px;align-items:center;padding:18px 24px;border-bottom:1px solid #edf1f3}
 .ranking-row.top-rank{background:#f4fbf8}.model-name{display:flex;align-items:center;gap:11px;min-width:0}
 .rank-num{font:600 12px 'IBM Plex Mono',monospace;color:#9cadb7;min-width:21px}
