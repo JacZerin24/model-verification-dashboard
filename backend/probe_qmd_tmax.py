@@ -20,10 +20,12 @@ def main():
         url=source_url(cycle,lead)+".idx"
         try:
             inventory=get(url).decode("utf-8",errors="replace").splitlines()
-            filtered=[x for x in inventory if (
-                ("max" in x.lower() or "tmax" in x.lower())
-                and ("tmp" in x.lower() or "max:" in x.lower() or "tmax" in x.lower())
-                and ("% level" in x.lower() or "percentile" in x.lower()))]
+            filtered=[x for x in inventory if ("max" in x.lower() or "tmax" in x.lower())
+                      and ("tmp" in x.lower() or "tmax" in x.lower() or ":MAX:" in x)]
+            instant=[x for x in inventory if ":TMP:2 m above ground:" in x]
+            max_window=[x for x in inventory if "18 hour" in x.lower() or "max-18h" in x.lower()]
+            lines.append(f"f{lead:03d} total idx lines: {len(inventory)}, TMP lines: {len(instant)}, 18h: {len(max_window)}")
+            lines.append("Example TMP: "+" | ".join(instant[:4]))
             lines.append(f"\nf{lead:03d}  matching MAX percentiles: {len(filtered)}")
             lines.extend(filtered[:40])
             if not filtered:
