@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from nbm_qmd import (
-    LEADS, PERCENTILES, interval_score, parse_index, quantile_loss,
+    LEADS, PERCENTILES, attach_same_cycle_guidance, interval_score, parse_index, quantile_loss,
     select_index, source_url, verify, weighted_interval_score,
 )
 
@@ -114,6 +114,38 @@ class QMDTests(unittest.TestCase):
         self.assertEqual(vals[75]["closestPct"],50)
         self.assertEqual(sum(r["closestPct"] for r in vals.values()),100)
         self.assertEqual(details[0]["closest"],[50,75])
+
+
+    def test_overlay_only_exact_model_cycle_and_valid_time(self):
+        valid = "2026-10-28T12:00:00Z"
+        init = "2026-10-28T00:00:00Z"
+        cases = [{"station": "KBTR", "element": "tmp", "valid": valid,
+                  "init": init, "lead": 12, "observed": 80,
+                  "forecast": {"10": 72, "25": 76, "50": 78,
+                               "75": 81, "90": 84}}]
+        archive = [
+            {"station":"KBTR","model":"NBS","init":init,"valid":valid,"tmp":79},
+            {"station":"KBTR","model":"GFS","init":init,"valid":valid,"tmp":77},
+            {"station":"KBTR","model":"NAM","init":init,"valid":valid,"tmp":None},
+            # Must NEVER use same valid time from a newer model cycle:
+            {"station":"KBTR","model":"NAM","init":"2026-10-28T06:00:00Z",
+             "valid":valid,"tmp":80},
+            {"station":"KBTR","model":"NBE","init":init,
+             "valid":"2026-10-29T12:00:00Z","tmp":79},
+            {"station":"KMSY","model":"NAM","init":init,"valid":valid,"tmp":80},
+            {"station":"KBTR","model":"GFS","init":init,"valid":valid,"dpt":60},
+        ]
+        result, counts = attach_same_cycle_guidance(cases, archive)
+        self.assertEqual(result[0]["guidance"], {"NBS": 79.0, "GFS": 77.0})
+        self.assertEqual(counts, {"NBS": 1, "NBE": 0, "GFS": 1, "NAM": 0})
+        self.assertEqual(cases[0].get("guidance"), None)
+
+    def test_overlay_keeps_missing_guidance_missing(self):
+        cases = [{"station":"KHDC","element":"dpt","valid":"2026-10-28T12:00:00Z",
+                  "init":"2026-10-28T00:00:00Z","lead":12,"observed":61}]
+        result, counts = attach_same_cycle_guidance(cases,[])
+        self.assertEqual(result[0]["guidance"],{})
+        self.assertTrue(all(v==0 for v in counts.values()))
 
     def test_url_construction(self):
         cycle=datetime(2026,10,28,tzinfo=timezone.utc)
