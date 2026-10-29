@@ -7,6 +7,7 @@ on:
       - '.github/workflows/nbm-qmd.yml'
       - 'backend/nbm_qmd.py'
       - 'backend/test_qmd.py'
+      - 'backend/probe_qmd_tmax.py'
   schedule:
     - cron: '47 9 * * *'
   workflow_dispatch:
@@ -52,6 +53,9 @@ jobs:
         run: |
           set -o pipefail
           python backend/nbm_qmd.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-qmd-job.log
+      - name: Inspect maximum-temperature percentile inventory
+        run: python backend/probe_qmd_tmax.py
+
       - name: Store QMD source health and verified sample archive
         if: always()
         run: |
@@ -67,6 +71,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add diagnostics/qmd-run.txt
+          if [ -f diagnostics/tmax-inventory.txt ]; then git add diagnostics/tmax-inventory.txt; fi
           if [ -f data/archive/qmd_forecasts.json ]; then git add data/archive/qmd_forecasts.json; fi
           if [ -f public/data/qmd.json ]; then git add public/data/qmd.json; fi
           if ! git diff --cached --quiet; then
