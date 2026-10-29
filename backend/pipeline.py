@@ -451,6 +451,9 @@ def run(offline=False, backfill_days=0):
         "latestForecasts": [], "recentObservations": [], "recentPairs": [],
         "quality": {
             "forecastRecords": len(forecasts), "observationRecords": len(observations),
+            "historyEarliestForecastRun": min((x["init"] for x in forecasts), default=None),
+            "historyLatestForecastRun": max((x["init"] for x in forecasts), default=None),
+            "historyEarliestObservation": min((x["valid"] for x in observations), default=None),
             "matchedElementPairs30d": matched, "fairCaseKeys30d": common_count,
             "warnings": warnings,
             "observationToleranceMinutes": 40, "archiveDays": 35,
