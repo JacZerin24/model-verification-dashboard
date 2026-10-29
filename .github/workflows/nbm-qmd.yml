@@ -7,6 +7,10 @@ on:
       - '.github/workflows/nbm-qmd.yml'
       - 'backend/nbm_qmd.py'
       - 'backend/test_qmd.py'
+      - 'backend/nbm_tmax.py'
+      - 'backend/tmax_observations.py'
+      - 'backend/test_nbm_tmax.py'
+      - 'backend/test_tmax_observations.py'
       - 'backend/probe_qmd_tmax.py'
   schedule:
     - cron: '47 3,9,15,21 * * *'
@@ -53,6 +57,13 @@ jobs:
         run: |
           set -o pipefail
           python backend/nbm_qmd.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-qmd-job.log
+      - name: Verify genuine 18-hour NBM Tmax percentiles
+        id: tmax
+        env:
+          BACKFILL_DAYS: ${{ github.event.inputs.days || '7' }}
+        run: |
+          set -o pipefail
+          python backend/nbm_tmax.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-tmax-job.log
       - name: Inspect maximum-temperature percentile inventory
         run: python backend/probe_qmd_tmax.py
 
@@ -67,6 +78,7 @@ jobs:
             if [ -f /tmp/qmd-install.log ]; then echo 'Install:'; tail -n 35 /tmp/qmd-install.log; fi
             if [ -f /tmp/qmd-tests.log ]; then echo 'Unit tests:'; tail -n 100 /tmp/qmd-tests.log; fi
             if [ -f /tmp/nbm-qmd-job.log ]; then echo 'Extractor:'; tail -n 100 /tmp/nbm-qmd-job.log; else echo 'No extractor log'; fi
+            if [ -f /tmp/nbm-tmax-job.log ]; then echo '18-hour Tmax:'; tail -n 100 /tmp/nbm-tmax-job.log; else echo 'Tmax step did not complete'; fi
           } > diagnostics/qmd-run.txt
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -74,6 +86,9 @@ jobs:
           if [ -f diagnostics/tmax-inventory.txt ]; then git add diagnostics/tmax-inventory.txt; fi
           if [ -f data/archive/qmd_forecasts.json ]; then git add data/archive/qmd_forecasts.json; fi
           if [ -f public/data/qmd.json ]; then git add public/data/qmd.json; fi
+          for f in data/archive/tmax_forecasts.json data/archive/metar_max6h.json public/data/tmax.json; do
+            if [ -f "$f" ]; then git add "$f"; fi
+          done
           if ! git diff --cached --quiet; then
             git commit -m 'data: archive real NBM QMD station percentiles and verification'
             git pull --rebase origin main
