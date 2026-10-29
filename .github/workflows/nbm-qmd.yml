@@ -14,14 +14,14 @@ on:
       days:
         description: 'Number of archived 00Z cycles to sample (1–30)'
         required: false
-        default: '3'
+        default: '1'
 
 permissions:
   contents: write
 
 concurrency:
   group: qmd-point-archive
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   qmd:
@@ -43,7 +43,7 @@ jobs:
       - name: Sample genuine NOAA NBM QMD GRIB2 distributions
         id: ingest
         env:
-          BACKFILL_DAYS: ${{ github.event.inputs.days || '3' }}
+          BACKFILL_DAYS: ${{ github.event.inputs.days || '1' }}
         run: |
           set -o pipefail
           python backend/nbm_qmd.py --days "$BACKFILL_DAYS" 2>&1 | tee /tmp/nbm-qmd-job.log
