@@ -1,0 +1,36 @@
+name: Validate NBM Tmax archive inventory
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/tmax-probe.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: tmax-inventory-probe
+  cancel-in-progress: true
+jobs:
+  inventory:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch and inspect NOAA NBM Tmax GRIB2 inventory
+        run: python backend/probe_qmd_tmax.py
+      - name: Persist source metadata for validated extraction
+        if: always()
+        run: |
+          mkdir -p diagnostics
+          if [ ! -f diagnostics/tmax-inventory.txt ]; then
+            echo 'Tmax source inventory fetch did not complete' > diagnostics/tmax-inventory.txt
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add diagnostics/tmax-inventory.txt
+          git commit -m 'data: inspect NBM Tmax source fields and valid periods' || true
+          git pull --rebase origin main || true
+          git push origin HEAD:main || true
