@@ -53,7 +53,7 @@ type QmdCase = VerificationCase & {
 }
 type QmdData = { generatedAt:string|null; dataStatus:string; scores:QmdScore[];
  recentCases?:QmdCase[]; timeseries?:VerificationCase[]; verificationType?:string;
- quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[]} }
+ quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[];sourceCycles?:string} }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
 type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
 const LEAD_OPTIONS: {value: Lead; label: string; short: string}[] = [
@@ -396,7 +396,7 @@ function App() {
               <SelectField id="qmd-lead" label="Forecast lead" value={qmdLead} onChange={setQmdLead} icon={Activity}
                 options={[12,24,36,48].map(x=>({value:String(x),label:x+' hours'}))}/>
             </div>
-            <p className="filter-hint"><Info size={14}/> QMD data covers instantaneous 2-m temperature/dew point, not daily maximum or minimum temperatures. NBM QMD issues at 00, 06, 12, and 18 UTC. Each forecast is evaluated only against observations at the corresponding valid time.</p>
+            <p className="filter-hint"><Info size={14}/> QMD data covers instantaneous 2-m temperature/dew point, not daily maximum or minimum temperatures. Collector supports 00/06/12/18 UTC; currently published cycles: {qmd?.quality.sourceCycles||'awaiting update'}. Each forecast is verified against observations at its own valid time.</p>
           </section>
           {qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
           <VerificationTimeSeries
@@ -482,7 +482,7 @@ function App() {
             <article className="surface percentile-card"><span className="step">P25 / P75</span><h2>Does the middle half verify?</h2><p>The central 50% range should capture about half of observations; overly narrow and overly broad intervals both have costs.</p><span className="work-tag">Spread and reliability</span></article>
             <article className="surface percentile-card"><span className="step">WIS</span><h2>Does the whole forecast have skill?</h2><p>Weighted interval score rewards sharper uncertainty estimates when they remain accurate, and penalizes misses.</p><span className="work-tag">Proper distribution score</span></article>
           </div>
-          <div className="next-phase"><Target size={23}/><div><strong>Data provenance</strong><p>NOAA public NBM QMD CONUS GRIB2 · 00/06/12/18 UTC cycles · nearest 2.5-km grid point · P10/P25/P50/P75/P90 for instantaneous temperature and dew point. Maximum-temperature verification is tracked separately.</p></div></div>
+          <div className="next-phase"><Target size={23}/><div><strong>Data provenance</strong><p>NOAA public NBM QMD CONUS GRIB2 · published cycles: {qmd?.quality.sourceCycles||'awaiting update'} · nearest 2.5-km grid point · P10/P25/P50/P75/P90 for instantaneous temperature and dew point. Maximum-temperature verification is tracked separately.</p></div></div>
         </div>:<div className="secondary-page">
           <div className="eyebrow"><span className="mini-bar"/> VERIFICATION GUIDE</div>
           <h1>Understand the numbers.<br/><span>Trust the comparison.</span></h1>
