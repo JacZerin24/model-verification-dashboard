@@ -206,6 +206,7 @@ def verify(records, observations, now):
         cases[key][f["percentile"]] = f["value"]
     group_stats = defaultdict(list)
     matched_cases = 0
+    case_details = []
     for (station, element, valid, init, lead), q in cases.items():
         if set(PERCENTILES) != set(q):
             continue
@@ -216,6 +217,20 @@ def verify(records, observations, now):
             continue
         y = verifying[element]
         matched_cases += 1
+        absolute_errors = {p: abs(q[p] - y) for p in PERCENTILES}
+        smallest_error = min(absolute_errors.values())
+        # Share wins between tied values; ties are common in rounded percentiles.
+        closest = [p for p in PERCENTILES
+                   if math.isclose(absolute_errors[p], smallest_error,
+                                   rel_tol=0, abs_tol=1e-8)]
+        case_details.append({
+            "station": station, "element": element, "valid": valid,
+            "init": init, "lead": lead, "observed": round(y, 2),
+            "observedAt": verifying["valid"],
+            "forecast": {str(p): round(q[p], 2) for p in PERCENTILES},
+            "absoluteErrors": {str(p): round(absolute_errors[p], 2) for p in PERCENTILES},
+            "closest": closest,
+        })
         metrics = {
             "p50AbsError": abs(q[50] - y),
             "p50Bias": q[50] - y,
@@ -229,6 +244,9 @@ def verify(records, observations, now):
         }
         for p in PERCENTILES:
             metrics[f"pinball{p}"] = quantile_loss(q[p], y, p/100)
+            metrics[f"absError{p}"] = absolute_errors[p]
+            metrics[f"bias{p}"] = q[p] - y
+            metrics[f"closestCredit{p}"] = 1.0 / len(closest) if p in closest else 0.0
         for days in (7, 30):
             if dt(valid) >= now - timedelta(days=days):
                 for station_key in (station, "ALL"):
@@ -242,11 +260,25 @@ def verify(records, observations, now):
                  "wis": mean("wis"), "interval80Width": mean("width80")}
         for key in ("coverage80", "coverage50", "p10Below", "p25Below", "p50Below", "p75Below", "p90Below"):
             entry[key] = round(100 * mean(key), 1)
+        ranking = []
         for p in PERCENTILES:
             entry[f"pinball{p}"] = mean(f"pinball{p}")
+            ranking.append({
+                "percentile": p,
+                "mae": mean(f"absError{p}"),
+                "bias": mean(f"bias{p}"),
+                "closestPct": round(100 * mean(f"closestCredit{p}"), 1),
+            })
+        ranking.sort(key=lambda r: (r["mae"], r["percentile"]))
+        entry["closestRanking"] = ranking
+        entry["closestByMAE"] = ranking[0]["percentile"]
+        entry["closestMostOften"] = min(
+            ranking, key=lambda r: (-r["closestPct"], r["mae"]))["percentile"]
         scored.append(entry)
     scored.sort(key=lambda x: (x["station"], x["element"], x["lead"], x["days"]))
-    return scored, matched_cases
+    case_details.sort(key=lambda case: (case["valid"], case["station"],
+                                         case["element"], case["lead"]), reverse=True)
+    return scored, matched_cases, case_details[:2500]
 
 
 def main():
@@ -291,7 +323,7 @@ def main():
                     print("WARNING "+warning,flush=True)
     archive=sorted(records.values(),key=lambda r:(r["init"],r["lead"],r["station"],r["element"],r["percentile"]))
     observations=read_archive("observations.json")
-    scores, matched=verify(archive,observations,now)
+    scores, matched, case_details=verify(archive,observations,now)
     write_json(ARCHIVE_FILE,archive)
     write_json(OUTPUT,{
         "generatedAt":iso(now),
@@ -301,6 +333,8 @@ def main():
         "percentiles":list(PERCENTILES),"leads":list(LEADS),
         "stations":[{"id":key,"name":meta["name"]} for key,meta in STATIONS.items()],
         "scores":scores,
+        "recentCases":case_details,
+        "verificationType":"instantaneous-2m-temperature-dewpoint-not-daily-maximum",
         "quality":{"archivedQuantilePoints":len(archive),"completeVerifyingCases":matched,
                    "observationToleranceMinutes":40,
                    "warnings":warnings,"sourceCycles":"00Z","spatialMethod":"nearest grid point"},
