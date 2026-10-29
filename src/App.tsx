@@ -418,7 +418,7 @@ function App() {
                   <span>{metric(r.closestPct,1)}% of cases</span>
                   <span>{signed(r.bias)} °F</span>
                 </div>)}
-              </div>:<Placeholder title="Point-forecast ranking is being generated" body="The QMD verification pipeline will add the error for each percentile, not only P50."/ >}
+              </div>:<Placeholder title="Point-forecast ranking is being generated" body="The QMD verification pipeline will add the error for each percentile, not only P50."/>}
               <p className="qmd-explain"><Info size={15}/> “Closest most often” splits credit for ties. This is a descriptive point-forecast comparison, <strong>not</strong> a substitute for probabilistic calibration or evidence that one percentile is always best.</p>
             </section>
             <section className="surface qmd-examples">
