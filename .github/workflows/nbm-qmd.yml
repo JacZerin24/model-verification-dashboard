@@ -9,11 +9,11 @@ on:
       - 'backend/test_qmd.py'
       - 'backend/probe_qmd_tmax.py'
   schedule:
-    - cron: '47 9 * * *'
+    - cron: '47 3,9,15,21 * * *'
   workflow_dispatch:
     inputs:
       days:
-        description: 'Number of archived 00Z cycles to sample (1–30)'
+        description: 'Recent UTC dates of 00/06/12/18Z cycles to sample (1–30)'
         required: false
         default: '7'
 
