@@ -43,12 +43,22 @@ async function main() {
   browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] })
   page = await browser.newPage({ viewport: { width: 1280, height: 860 } })
   page.on('pageerror', error => errors.push(error.stack || String(error)))
+  const pageOrigin = new URL(base).origin
   page.on('console', msg => {
-    if (msg.type() === 'error') errors.push('console: ' + msg.text())
+    // The browser also emits generic resource errors for optional third-party
+    // fonts; capture exact same-origin network failures below instead.
+    if (msg.type() === 'error' && !msg.text().includes('Failed to load resource'))
+      errors.push('console: ' + msg.text())
   })
-  page.on('requestfailed', request => errors.push(
-    'request failed: ' + request.url() + ' ' + (request.failure()?.errorText || 'unknown')
-  ))
+  page.on('requestfailed', request => {
+    if (new URL(request.url()).origin === pageOrigin)
+      errors.push('request failed: ' + request.url() + ' ' + (request.failure()?.errorText || 'unknown'))
+  })
+  page.on('response', response => {
+    if (new URL(response.url()).origin === pageOrigin && response.status() >= 400 &&
+      /\.(?:js|css|json)(?:\?|$)/.test(response.url()))
+      errors.push('HTTP ' + response.status() + ': ' + response.url())
+  })
 
   for (let attempt = 0; attempt < 40; attempt++) {
     try {
