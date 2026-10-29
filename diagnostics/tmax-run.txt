@@ -1,0 +1,53 @@
+Tmax pilot validation
+UTC: 2026-10-29T21:22:43Z
+test_max_fields_exact_statistical_window (test_nbm_tmax.TmaxQmdTests.test_max_fields_exact_statistical_window) ... ok
+test_period_obs_requires_all_six_hour_reports (test_nbm_tmax.TmaxQmdTests.test_period_obs_requires_all_six_hour_reports) ... ok
+test_asos_parsing (test_pipeline.PipelineTests.test_asos_parsing) ... ok
+test_common_case_requires_all_models (test_pipeline.PipelineTests.test_common_case_requires_all_models) ... ok
+test_common_case_scores_identical_samples_and_wins (test_pipeline.PipelineTests.test_common_case_scores_identical_samples_and_wins) ... ok
+test_common_case_selects_nearest_lead_center (test_pipeline.PipelineTests.test_common_case_selects_nearest_lead_center) ... ok
+test_keep_original_forecast_runs (test_pipeline.PipelineTests.test_keep_original_forecast_runs) ... ok
+test_mos_original_run_and_lead (test_pipeline.PipelineTests.test_mos_original_run_and_lead) ... ok
+test_numeric_missing (test_pipeline.PipelineTests.test_numeric_missing) ... ok
+test_short_range_compares_three_available_products (test_pipeline.PipelineTests.test_short_range_compares_three_available_products) ... ok
+test_time_tolerance (test_pipeline.PipelineTests.test_time_tolerance) ... ok
+test_verification_and_bias_sign (test_pipeline.PipelineTests.test_verification_and_bias_sign) ... ok
+test_wind_gust_compares_nbm_products_only (test_pipeline.PipelineTests.test_wind_gust_compares_nbm_products_only) ... ok
+test_available_four_cycles_and_latency (test_qmd.QMDTests.test_available_four_cycles_and_latency) ... ok
+test_closest_percentile_for_observed_80 (test_qmd.QMDTests.test_closest_percentile_for_observed_80) ... ok
+test_closest_percentile_ties_share_credit (test_qmd.QMDTests.test_closest_percentile_ties_share_credit) ... ok
+test_index_offsets_and_excludes_last_unknown_length (test_qmd.QMDTests.test_index_offsets_and_excludes_last_unknown_length) ... ok
+test_interval_score_penalizes_misses (test_qmd.QMDTests.test_interval_score_penalizes_misses) ... ok
+test_no_accumulated_max_or_min_percentiles (test_qmd.QMDTests.test_no_accumulated_max_or_min_percentiles) ... ok
+test_overlay_keeps_missing_guidance_missing (test_qmd.QMDTests.test_overlay_keeps_missing_guidance_missing) ... ok
+test_overlay_only_exact_model_cycle_and_valid_time (test_qmd.QMDTests.test_overlay_only_exact_model_cycle_and_valid_time) ... ok
+test_quantile_pinball_loss (test_qmd.QMDTests.test_quantile_pinball_loss) ... ok
+test_url_construction (test_qmd.QMDTests.test_url_construction) ... ok
+test_verify_complete_quantiles_only (test_qmd.QMDTests.test_verify_complete_quantiles_only) ... ok
+test_wis_nonnegative (test_qmd.QMDTests.test_wis_nonnegative) ... ok
+test_exact_three_six_hour_groups_for_eighteen_hour_max (test_tmax_observations.TmaxObservationTests.test_exact_three_six_hour_groups_for_eighteen_hour_max) ... ok
+test_parse_csv (test_tmax_observations.TmaxObservationTests.test_parse_csv) ... ok
+test_reject_wrong_boundary_and_missing_report (test_tmax_observations.TmaxObservationTests.test_reject_wrong_boundary_and_missing_report) ... ok
+test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationTests.test_six_hour_remarks_and_signed_tenths) ... ok
+
+----------------------------------------------------------------------
+Ran 29 tests in 0.003s
+
+OK
+Tmax 2026-10-29T06:00:00Z f024: retrieving
+Tmax 2026-10-29T06:00:00Z f048: retrieving
+Tmax 2026-10-29T06:00:00Z f072: retrieving
+Tmax 2026-10-28T06:00:00Z f024: retrieving
+Tmax 2026-10-28T06:00:00Z f048: retrieving
+Tmax 2026-10-28T06:00:00Z f072: retrieving
+Tmax 2026-10-27T06:00:00Z f024: retrieving
+Tmax 2026-10-27T06:00:00Z f048: retrieving
+Tmax 2026-10-27T06:00:00Z f072: retrieving
+METAR 6-hour maxima KBTR: 35
+METAR 6-hour maxima KMSY: 35
+METAR 6-hour maxima KHDC: 35
+METAR 6-hour maxima KNEW: 35
+METAR 6-hour maxima KASD: 35
+METAR 6-hour maxima KMCB: 35
+METAR 6-hour maxima KGPT: 35
+18h Tmax: 0 percentile values, 0 complete verifying cases; 9 warnings
