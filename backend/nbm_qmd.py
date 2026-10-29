@@ -3,7 +3,7 @@
 
 Uses anonymous NOAA AWS .idx inventories + HTTP GRIB2 byte ranges. No synthetic
 percentiles and no distribution approximations from text-card standard deviations.
-Requires pip package eccodes. Initial scope: CONUS 00Z, f012/f024/f036/f048,
+Requires pip package eccodes. Initial scope: CONUS 00/06/12/18Z, f012/f024/f036/f048,
 2-m temperature and dewpoint, P10/P25/P50/P75/P90, seven LIX stations.
 """
 from __future__ import annotations
@@ -319,9 +319,21 @@ def verify(records, observations, now):
     return scored, matched_cases, case_details[:2500]
 
 
+def available_qmd_cycles(now, days):
+    """List issued QMD 00/06/12/18Z cycles after conservative 9h latency."""
+    eligible = now - timedelta(hours=9)
+    newest_day = eligible.replace(hour=0, minute=0, second=0, microsecond=0)
+    return [
+        newest_day - timedelta(days=age) + timedelta(hours=hour)
+        for age in range(days)
+        for hour in (0, 6, 12, 18)
+        if newest_day - timedelta(days=age) + timedelta(hours=hour) <= eligible
+    ]
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--days", type=int, default=2, help="How many 00Z cycles to attempt")
+    parser.add_argument("--days", type=int, default=2, help="How many recent UTC dates of 00/06/12/18Z QMD to attempt")
     parser.add_argument("--no-network", action="store_true")
     parser.add_argument("--max-stations", type=int, default=7)
     args = parser.parse_args()
@@ -333,13 +345,8 @@ def main():
                for row in previous if row.get("valid","") >= iso(now-timedelta(days=35))}
     warnings = []
     if not args.no_network:
-        # Forecast cycles need at least the expected publication latency.
-        # 00Z QMD may not be available until 07:20Z.
-        latest = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        if now.hour < 9:
-            latest -= timedelta(days=1)
-        for age in range(args.days):
-            cycle = latest - timedelta(days=age)
+        # CONUS QMD issues at 00/06/12/18 UTC; allow publication latency.
+        for cycle in available_qmd_cycles(now, args.days):
             for lead in LEADS:
                 known = {(r["station"],r["element"],r["percentile"])
                          for r in records.values() if r["init"] == iso(cycle) and r["lead"]==lead}
@@ -384,7 +391,7 @@ def main():
         "quality":{"archivedQuantilePoints":len(archive),"completeVerifyingCases":matched,
                    "observationToleranceMinutes":40,
                    "sameCycleGuidanceValues":guidance_counts,
-                   "warnings":warnings,"sourceCycles":"00Z","spatialMethod":"nearest grid point"},
+                   "warnings":warnings,"sourceCycles":"00/06/12/18Z","spatialMethod":"nearest grid point"},
     })
     print(f"QMD status: {len(archive)} quantile values; {matched} verifying cases; {len(warnings)} warnings",flush=True)
 
