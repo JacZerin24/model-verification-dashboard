@@ -10,6 +10,7 @@ import {
   XAxis, YAxis,
 } from 'recharts'
 import './styles.css'
+import VerificationTimeSeries, { type VerificationCase } from './VerificationTimeSeries'
 
 type Station = { id: string; name: string }
 type Model = { id: string; label: string; family?: string }
@@ -47,13 +48,11 @@ type QmdScore = {
  closestRanking?:QmdPercentileRank[];
  closestByMAE?:number; closestMostOften?:number;
 }
-type QmdCase = {
- station:string; element:string; valid:string; observedAt:string; init:string;
- lead:number; observed:number; forecast:Record<string,number>;
- absoluteErrors:Record<string,number>; closest:number[];
+type QmdCase = VerificationCase & {
+ observedAt:string; absoluteErrors:Record<string,number>; closest:number[];
 }
 type QmdData = { generatedAt:string|null; dataStatus:string; scores:QmdScore[];
- recentCases?:QmdCase[]; verificationType?:string;
+ recentCases?:QmdCase[]; timeseries?:VerificationCase[]; verificationType?:string;
  quality:{archivedQuantilePoints:number;completeVerifyingCases:number;warnings:string[]} }
 type Tab = 'rankings' | 'stations' | 'percentiles' | 'about'
 type Lead = '0-12' | '12-24' | '24-48' | '48-72' | '72-120'
@@ -144,7 +143,7 @@ function App() {
   const [loadError,setLoadError]=useState('')
   const [qmd,setQmd]=useState<QmdData|null>(null)
   const [qmdLoadError,setQmdLoadError]=useState('')
-  const [qmdStation,setQmdStation]=useState('ALL')
+  const [qmdStation,setQmdStation]=useState('KBTR')
   const [qmdElement,setQmdElement]=useState('tmp')
   const [qmdLead,setQmdLead]=useState('12')
   const [qmdDays,setQmdDays]=useState('7')
@@ -400,11 +399,19 @@ function App() {
             <p className="filter-hint"><Info size={14}/> QMD data covers instantaneous 2-m temperature/dew point, not daily maximum or minimum temperatures. The 00Z forecast cycles are evaluated at matching valid times.</p>
           </section>
           {qmdLoadError&&<div className="alert warning"><CircleAlert size={18}/> QMD data isn't available yet ({qmdLoadError}). Deterministic verification remains operational.</div>}
+          <VerificationTimeSeries
+            cases={qmd?.timeseries||qmd?.recentCases||[]}
+            station={qmdStation}
+            element={qmdElement}
+            lead={Number(qmdLead)}
+            days={Number(qmdDays)}
+            referenceTime={Date.now()}
+          />
           {qmdScore?<div>
             <section className="surface qmd-accuracy-card">
               <div className="qmd-accuracy-head">
                 <div>
-                  <span className="eyebrow">01 · CLOSEST TO OBSERVED VALUE</span>
+                  <span className="eyebrow">02 · CLOSEST TO OBSERVED VALUE</span>
                   <h2>{qmdScore.closestByMAE===undefined?'Point-forecast ranking not generated yet':'P'+qmdScore.closestByMAE+' has been closest on average'}</h2>
                   <p>Ranked by the average absolute difference between each percentile forecast and the actual observed {qmdElement==='tmp'?'temperature':'dew point'}. Lower error is better. All percentiles are scored on the same {qmdScore.n} cases.</p>
                 </div>
@@ -422,7 +429,7 @@ function App() {
               <p className="qmd-explain"><Info size={15}/> “Closest most often” splits credit for ties. This is a descriptive point-forecast comparison, <strong>not</strong> a substitute for probabilistic calibration or evidence that one percentile is always best.</p>
             </section>
             <section className="surface qmd-examples">
-              <SectionHeading kicker="02 · REAL VERIFYING EXAMPLES" title="What value actually verified?" description="For each valid time, compare the observed reading with all five percentile forecasts. The nearest percentile is highlighted."/>
+              <SectionHeading kicker="03 · REAL VERIFYING EXAMPLES" title="What value actually verified?" description="For each valid time, compare the observed reading with all five percentile forecasts. The nearest percentile is highlighted."/>
               {qmdExamples.length?<div className="qmd-examples-scroll"><table>
                 <thead><tr><th>STATION · VALID TIME</th><th>OBSERVED</th>{[10,25,50,75,90].map(p=><th key={p}>P{p}</th>)}<th>CLOSEST</th></tr></thead>
                 <tbody>{qmdExamples.map((x,i)=><tr key={x.station+x.valid+x.lead+x.element+i}>
@@ -446,7 +453,7 @@ function App() {
             </div>
             <div className="split-panels">
               <section className="surface">
-                <SectionHeading kicker="03 · RELIABILITY" title="Is each percentile calibrated?" description="A calibrated P10 should exceed the observed value around 10% of the time, P50 about 50%, and P90 about 90%."/>
+                <SectionHeading kicker="04 · RELIABILITY" title="Is each percentile calibrated?" description="A calibrated P10 should exceed the observed value around 10% of the time, P50 about 50%, and P90 about 90%."/>
                 <div className="qmd-table">
                   {([10,25,50,75,90] as const).map(p=>{
                     const measured=qmdScore[('p'+p+'Below') as keyof QmdScore] as number
@@ -455,7 +462,7 @@ function App() {
                 </div>
               </section>
               <section className="surface">
-                <SectionHeading kicker="04 · DISTRIBUTION SKILL" title="How useful is the spread?" description="The same observations are checked against multiple forecast quantiles, evaluating both interval width and misses."/>
+                <SectionHeading kicker="05 · DISTRIBUTION SKILL" title="How useful is the spread?" description="The same observations are checked against multiple forecast quantiles, evaluating both interval width and misses."/>
                 <div className="qmd-secondary-metrics">
                   <div><span>Weighted interval score</span><strong>{metric(qmdScore.wis)} °F</strong><small>Lower is better on comparable samples</small></div>
                   <div><span>Average P10–P90 width</span><strong>{metric(qmdScore.interval80Width)} °F</strong><small>Typical uncertainty range</small></div>
