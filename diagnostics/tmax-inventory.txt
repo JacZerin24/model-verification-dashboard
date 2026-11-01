@@ -1,4 +1,4 @@
-QMD temperature maximum source probe; UTC: 2026-10-31T19:35:05Z
+QMD temperature maximum source probe; UTC: 2026-11-01T00:28:29Z
 A MAX percentile is NOT automatically the NWS official daily high.
 Source cycle: 2026-10-31T00:00:00Z
 Alternative 06Z source cycle: 2026-10-31T06:00:00Z
@@ -120,4 +120,4 @@ f072  matching MAX percentiles: 30
 263:479460090:d=2026103106:TMP:2 m above ground:54-72 hour max fcst:95% level
 264:481651493:d=2026103106:TMP:2 m above ground:54-72 hour max fcst:100% level
 265:483878772:d=2026103106:TMP:2 m above ground:54-72 hour max fcst:
-IEM NBP source probe ERROR RuntimeError: HTTP Error 422: Unprocessable Content
+IEM NBP source probe ERROR RuntimeError: <urlopen error [Errno 104] Connection reset by peer>
