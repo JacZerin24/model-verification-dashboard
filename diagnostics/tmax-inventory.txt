@@ -1,12 +1,123 @@
-QMD temperature maximum source probe; UTC: 2026-11-13T11:38:22Z
+QMD temperature maximum source probe; UTC: 2026-11-13T21:42:38Z
 A MAX percentile is NOT automatically the NWS official daily high.
 Source cycle: 2026-11-13T00:00:00Z
 Alternative 06Z source cycle: 2026-11-13T06:00:00Z
-f018 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f018.co.grib2.idx: HTTP Error 404: Not Found
-f024 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f024.co.grib2.idx: HTTP Error 404: Not Found
-f030 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f030.co.grib2.idx: HTTP Error 404: Not Found
-f042 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f042.co.grib2.idx: HTTP Error 404: Not Found
-f048 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f048.co.grib2.idx: HTTP Error 404: Not Found
-f066 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f066.co.grib2.idx: HTTP Error 404: Not Found
-f072 ERROR RuntimeError: https://noaa-nbm-grib2-pds.s3.amazonaws.com/blend.20261113/06/qmd/blend.t06z.qmd.f072.co.grib2.idx: HTTP Error 404: Not Found
+f018 total idx lines: 295, TMP lines: 31, 18h: 295
+Example TMP: 203:363178487:d=2026111306:TMP:2 m above ground:18 hour fcst:prob <255.372:prob fcst 255/255 | 204:363646842:d=2026111306:TMP:2 m above ground:18 hour fcst:prob <270.928:prob fcst 255/255 | 205:364385616:d=2026111306:TMP:2 m above ground:18 hour fcst:prob <273.15:prob fcst 255/255 | 206:365518818:d=2026111306:TMP:2 m above ground:18 hour fcst:prob >299.817:prob fcst 255/255
+
+f018  matching MAX percentiles: 0
+f024 total idx lines: 417, TMP lines: 62, 18h: 0
+Example TMP: 236:438286278:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <255.372:prob fcst 255/255 | 237:438754657:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <270.928:prob fcst 255/255 | 238:439340079:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <273.15:prob fcst 255/255 | 239:440151455:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >299.817:prob fcst 255/255
+
+f024  matching MAX percentiles: 30
+236:438286278:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <255.372:prob fcst 255/255
+237:438754657:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <270.928:prob fcst 255/255
+238:439340079:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob <273.15:prob fcst 255/255
+239:440151455:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >299.817:prob fcst 255/255
+240:440822165:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >305.372:prob fcst 255/255
+241:441300482:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >310.928:prob fcst 255/255
+242:441768861:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >316.483:prob fcst 255/255
+243:442237240:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:prob >322.039:prob fcst 255/255
+244:442705619:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:0% level
+245:444964597:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:5% level
+246:447196427:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:10% level
+247:449426766:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:15% level
+248:451658121:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:20% level
+249:453912345:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:25% level
+250:456165466:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:30% level
+251:458389067:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:35% level
+252:460610151:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:40% level
+253:462831054:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:45% level
+254:465080072:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:50% level
+255:467327523:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:55% level
+256:469545767:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:60% level
+257:471791358:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:65% level
+258:474006275:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:70% level
+259:476250018:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:75% level
+260:478494224:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:80% level
+261:480734271:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:85% level
+262:482951844:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:90% level
+263:485195158:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:95% level
+264:487409540:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:100% level
+265:489632792:d=2026111306:TMP:2 m above ground:6-24 hour max fcst:
+f030 total idx lines: 327, TMP lines: 31, 18h: 0
+Example TMP: 235:430291703:d=2026111306:TMP:2 m above ground:30 hour fcst:prob <255.372:prob fcst 255/255 | 236:430760058:d=2026111306:TMP:2 m above ground:30 hour fcst:prob <270.928:prob fcst 255/255 | 237:432047475:d=2026111306:TMP:2 m above ground:30 hour fcst:prob <273.15:prob fcst 255/255 | 238:433464673:d=2026111306:TMP:2 m above ground:30 hour fcst:prob >299.817:prob fcst 255/255
+
+f030  matching MAX percentiles: 0
+f042 total idx lines: 327, TMP lines: 31, 18h: 0
+Example TMP: 235:429443316:d=2026111306:TMP:2 m above ground:42 hour fcst:prob <255.372:prob fcst 255/255 | 236:429911671:d=2026111306:TMP:2 m above ground:42 hour fcst:prob <270.928:prob fcst 255/255 | 237:430736492:d=2026111306:TMP:2 m above ground:42 hour fcst:prob <273.15:prob fcst 255/255 | 238:431894950:d=2026111306:TMP:2 m above ground:42 hour fcst:prob >299.817:prob fcst 255/255
+
+f042  matching MAX percentiles: 0
+f048 total idx lines: 417, TMP lines: 62, 18h: 0
+Example TMP: 236:422573171:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <255.372:prob fcst 255/255 | 237:423041550:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <270.928:prob fcst 255/255 | 238:423695406:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <273.15:prob fcst 255/255 | 239:424565404:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >299.817:prob fcst 255/255
+
+f048  matching MAX percentiles: 30
+236:422573171:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <255.372:prob fcst 255/255
+237:423041550:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <270.928:prob fcst 255/255
+238:423695406:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob <273.15:prob fcst 255/255
+239:424565404:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >299.817:prob fcst 255/255
+240:425229809:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >305.372:prob fcst 255/255
+241:425705955:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >310.928:prob fcst 255/255
+242:426174334:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >316.483:prob fcst 255/255
+243:426642713:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:prob >322.039:prob fcst 255/255
+244:427111092:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:0% level
+245:429314093:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:5% level
+246:431540085:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:10% level
+247:433749158:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:15% level
+248:435980407:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:20% level
+249:438214222:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:25% level
+250:440445924:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:30% level
+251:442649164:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:35% level
+252:444853528:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:40% level
+253:447082866:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:45% level
+254:449286992:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:50% level
+255:451486587:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:55% level
+256:453689548:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:60% level
+257:455915102:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:65% level
+258:458115826:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:70% level
+259:460316270:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:75% level
+260:462515141:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:80% level
+261:464717900:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:85% level
+262:466917671:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:90% level
+263:469125686:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:95% level
+264:471326338:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:100% level
+265:473542347:d=2026111306:TMP:2 m above ground:30-48 hour max fcst:
+f066 total idx lines: 359, TMP lines: 31, 18h: 0
+Example TMP: 267:490164299:d=2026111306:TMP:2 m above ground:66 hour fcst:prob <255.372:prob fcst 255/255 | 268:490632654:d=2026111306:TMP:2 m above ground:66 hour fcst:prob <270.928:prob fcst 255/255 | 269:491403931:d=2026111306:TMP:2 m above ground:66 hour fcst:prob <273.15:prob fcst 255/255 | 270:492479512:d=2026111306:TMP:2 m above ground:66 hour fcst:prob >299.817:prob fcst 255/255
+
+f066  matching MAX percentiles: 0
+f072 total idx lines: 417, TMP lines: 62, 18h: 0
+Example TMP: 236:407465638:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <255.372:prob fcst 255/255 | 237:407934017:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <270.928:prob fcst 255/255 | 238:408572686:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <273.15:prob fcst 255/255 | 239:409339822:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >299.817:prob fcst 255/255
+
+f072  matching MAX percentiles: 30
+236:407465638:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <255.372:prob fcst 255/255
+237:407934017:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <270.928:prob fcst 255/255
+238:408572686:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob <273.15:prob fcst 255/255
+239:409339822:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >299.817:prob fcst 255/255
+240:410033378:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >305.372:prob fcst 255/255
+241:410520098:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >310.928:prob fcst 255/255
+242:410988477:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >316.483:prob fcst 255/255
+243:411456856:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:prob >322.039:prob fcst 255/255
+244:411925235:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:0% level
+245:414144542:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:5% level
+246:416343904:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:10% level
+247:418544969:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:15% level
+248:420752099:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:20% level
+249:422986245:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:25% level
+250:425187007:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:30% level
+251:427419300:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:35% level
+252:429626636:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:40% level
+253:431829550:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:45% level
+254:434061386:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:50% level
+255:436298548:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:55% level
+256:438504589:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:60% level
+257:440739746:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:65% level
+258:442951554:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:70% level
+259:445163151:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:75% level
+260:447373025:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:80% level
+261:449586267:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:85% level
+262:451799355:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:90% level
+263:454008433:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:95% level
+264:456219305:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:100% level
+265:458439175:d=2026111306:TMP:2 m above ground:54-72 hour max fcst:
 IEM NBP source probe ERROR RuntimeError: HTTP Error 422: Unprocessable Content
