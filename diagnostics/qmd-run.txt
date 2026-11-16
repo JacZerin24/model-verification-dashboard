@@ -1,11 +1,11 @@
 NBM QMD point extraction status
-UTC: 2026-11-15T20:37:32Z
+UTC: 2026-11-16T01:26:04Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
   Downloading eccodes-2.50.1-py3-none-any.whl.metadata (16 kB)
 Collecting numpy (from eccodes<3,>=2.38)
-  Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
+  Downloading numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl.metadata (6.6 kB)
 Collecting attrs (from eccodes<3,>=2.38)
   Downloading attrs-26.1.0-py3-none-any.whl.metadata (8.8 kB)
 Collecting cffi (from eccodes<3,>=2.38)
@@ -22,16 +22,16 @@ Downloading eccodes-2.50.1-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.34-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 87.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 65.3 MB/s  0:00:00
 Downloading eckitlib-2.5.0.34-cp312-cp312-manylinux_2_28_x86_64.whl (36.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.2/36.2 MB 79.9 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.2/36.2 MB 43.8 MB/s  0:00:00
 Downloading findlibs-0.1.5-py3-none-any.whl (10 kB)
-Downloading numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (16.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.7/16.7 MB 283.1 MB/s  0:00:00
+Downloading numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (15.7 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.7/15.7 MB 134.5 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
-Successfully installed attrs-26.1.0 cffi-2.1.1 eccodes-2.50.1 eccodeslib-2.50.0.34 eckitlib-2.5.0.34 findlibs-0.1.5 numpy-2.5.4 pycparser-3.12
+Successfully installed attrs-26.1.0 cffi-2.1.1 eccodes-2.50.1 eccodeslib-2.50.0.34 eckitlib-2.5.0.34 findlibs-0.1.5 numpy-2.5.5 pycparser-3.12
 Unit tests:
 test_max_fields_exact_statistical_window (test_nbm_tmax.TmaxQmdTests.test_max_fields_exact_statistical_window) ... ok
 test_period_obs_requires_all_six_hour_reports (test_nbm_tmax.TmaxQmdTests.test_period_obs_requires_all_six_hour_reports) ... ok
@@ -65,31 +65,25 @@ test_reject_wrong_boundary_and_missing_report (test_tmax_observations.TmaxObserv
 test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationTests.test_six_hour_remarks_and_signed_tenths) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 0.006s
+Ran 30 tests in 0.003s
 
 OK
 Extractor:
-QMD 2026-11-15T06:00:00+00:00 f012: fetching source inventory
+QMD 2026-11-15T12:00:00+00:00 f012: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-15T06:00:00+00:00 f024: fetching source inventory
+QMD 2026-11-15T12:00:00+00:00 f024: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-15T06:00:00+00:00 f036: fetching source inventory
+QMD 2026-11-15T12:00:00+00:00 f036: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-15T06:00:00+00:00 f048: fetching source inventory
+QMD 2026-11-15T12:00:00+00:00 f048: fetching source inventory
 Saved 70 percentile station values
-QMD status: 22400 quantile values; 4224 verifying cases; 0 warnings
+QMD status: 22680 quantile values; 4280 verifying cases; 0 warnings
 18-hour Tmax:
-Tmax 2026-11-15T06:00:00Z f024: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-11-15T06:00:00Z f048: retrieving
-Decoded 35 Tmax percentile points
-Tmax 2026-11-15T06:00:00Z f072: retrieving
-Decoded 35 Tmax percentile points
-METAR 6-hour maxima KBTR: 49
-METAR 6-hour maxima KMSY: 51
-METAR 6-hour maxima KHDC: 51
-METAR 6-hour maxima KNEW: 51
-METAR 6-hour maxima KASD: 49
-METAR 6-hour maxima KMCB: 50
-METAR 6-hour maxima KGPT: 51
+METAR 6-hour maxima KBTR: 46
+METAR 6-hour maxima KMSY: 48
+METAR 6-hour maxima KHDC: 48
+METAR 6-hour maxima KNEW: 48
+METAR 6-hour maxima KASD: 46
+METAR 6-hour maxima KMCB: 47
+METAR 6-hour maxima KGPT: 46
 18h Tmax: 2520 percentile values, 447 complete verifying cases; 0 warnings
