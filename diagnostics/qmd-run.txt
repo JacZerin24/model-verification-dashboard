@@ -1,5 +1,5 @@
 NBM QMD point extraction status
-UTC: 2026-11-25T13:34:28Z
+UTC: 2026-11-25T23:50:52Z
 Check last 80 log lines for source inventory or decoder errors:
 Install:
 Collecting eccodes<3,>=2.38
@@ -22,12 +22,12 @@ Downloading eccodes-2.50.1-py3-none-any.whl (91 kB)
 Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
 Downloading cffi-2.1.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl (221 kB)
 Downloading eccodeslib-2.50.0.34-cp312-cp312-manylinux_2_28_x86_64.whl (9.0 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 134.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 9.0/9.0 MB 77.6 MB/s  0:00:00
 Downloading eckitlib-2.5.0.34-cp312-cp312-manylinux_2_28_x86_64.whl (36.2 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.2/36.2 MB 118.2 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.2/36.2 MB 125.2 MB/s  0:00:00
 Downloading findlibs-0.1.5-py3-none-any.whl (10 kB)
 Downloading numpy-2.5.5-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl (15.7 MB)
-   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.7/15.7 MB 283.6 MB/s  0:00:00
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 15.7/15.7 MB 138.3 MB/s  0:00:00
 Downloading pycparser-3.12-py3-none-any.whl (62 kB)
 Installing collected packages: eckitlib, pycparser, numpy, findlibs, eccodeslib, attrs, cffi, eccodes
 
@@ -65,33 +65,39 @@ test_reject_wrong_boundary_and_missing_report (test_tmax_observations.TmaxObserv
 test_six_hour_remarks_and_signed_tenths (test_tmax_observations.TmaxObservationTests.test_six_hour_remarks_and_signed_tenths) ... ok
 
 ----------------------------------------------------------------------
-Ran 30 tests in 0.003s
+Ran 30 tests in 0.004s
 
 OK
 Extractor:
-QMD 2026-11-25T00:00:00+00:00 f012: fetching source inventory
+QMD 2026-11-25T06:00:00+00:00 f012: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-25T00:00:00+00:00 f024: fetching source inventory
+QMD 2026-11-25T06:00:00+00:00 f024: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-25T00:00:00+00:00 f036: fetching source inventory
+QMD 2026-11-25T06:00:00+00:00 f036: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-25T00:00:00+00:00 f048: fetching source inventory
+QMD 2026-11-25T06:00:00+00:00 f048: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-24T18:00:00+00:00 f012: fetching source inventory
+QMD 2026-11-25T12:00:00+00:00 f012: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-24T18:00:00+00:00 f024: fetching source inventory
+QMD 2026-11-25T12:00:00+00:00 f024: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-24T18:00:00+00:00 f036: fetching source inventory
+QMD 2026-11-25T12:00:00+00:00 f036: fetching source inventory
 Saved 70 percentile station values
-QMD 2026-11-24T18:00:00+00:00 f048: fetching source inventory
+QMD 2026-11-25T12:00:00+00:00 f048: fetching source inventory
 Saved 70 percentile station values
-QMD status: 33320 quantile values; 6128 verifying cases; 0 warnings
+QMD status: 33880 quantile values; 6240 verifying cases; 0 warnings
 18-hour Tmax:
-METAR 6-hour maxima KBTR: 49
-METAR 6-hour maxima KMSY: 50
-METAR 6-hour maxima KHDC: 50
-METAR 6-hour maxima KNEW: 50
-METAR 6-hour maxima KASD: 49
-METAR 6-hour maxima KMCB: 50
-METAR 6-hour maxima KGPT: 50
-18h Tmax: 3465 percentile values, 615 complete verifying cases; 0 warnings
+Tmax 2026-11-25T06:00:00Z f024: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-11-25T06:00:00Z f048: retrieving
+Decoded 35 Tmax percentile points
+Tmax 2026-11-25T06:00:00Z f072: retrieving
+Decoded 35 Tmax percentile points
+METAR 6-hour maxima KBTR: 50
+METAR 6-hour maxima KMSY: 51
+METAR 6-hour maxima KHDC: 51
+METAR 6-hour maxima KNEW: 51
+METAR 6-hour maxima KASD: 50
+METAR 6-hour maxima KMCB: 51
+METAR 6-hour maxima KGPT: 51
+18h Tmax: 3570 percentile values, 615 complete verifying cases; 0 warnings
